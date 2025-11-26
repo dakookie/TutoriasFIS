@@ -19,7 +19,7 @@
 
 1. **Clonar el repositorio:**
 ```bash
-git clone <url-repositorio>
+git clone https://github.com/dakookie/TutoriasFIS.git
 cd "Tutorias FIS"
 ```
 
@@ -61,7 +61,7 @@ Una vez iniciado el servidor, accede a: **http://localhost:3000**
 
 **Administrador:**
 - Email: `admin@fis.epn.edu.ec`
-- Contraseña: `admin123`
+- Contraseña: `admin123!`
 
 **Tutores:**
 - `juan.perez@epn.edu.ec` / `tutor123`
@@ -84,13 +84,15 @@ Tutorias FIS/
 │   ├── Tutoria.js           # Modelo de tutorías
 │   ├── Solicitud.js         # Modelo de solicitudes
 │   ├── Pregunta.js          # Modelo de preguntas
-│   └── Respuesta.js         # Modelo de respuestas
+│   ├── Respuesta.js         # Modelo de respuestas
+│   └── Mensaje.js           # Modelo de mensajes de chat
 ├── routes/
 │   ├── auth.js              # Rutas de autenticación
 │   ├── admin.js             # Rutas de administración
 │   ├── tutorias.js          # Rutas de tutorías
 │   ├── solicitudes.js       # Rutas de solicitudes
-│   └── encuestas.js         # Rutas de encuestas
+│   ├── encuestas.js         # Rutas de encuestas
+│   └── mensajes.js          # Rutas de mensajería
 ├── middleware/
 │   └── auth.js              # Middleware de autenticación
 ├── scripts/
@@ -100,8 +102,10 @@ Tutorias FIS/
 │   ├── registro.html
 │   ├── admin.html
 │   ├── index.html
+│   ├── chat.html            # Interfaz de chat
 │   ├── css/
-│   │   └── styles.css
+│   │   ├── styles.css
+│   │   └── app.css          # Estilos globales y chat
 │   └── js/
 │       ├── api-client.js    # Cliente API REST
 │       ├── socket-client.js # Cliente Socket.IO
@@ -109,6 +113,7 @@ Tutorias FIS/
 │       ├── admin.js
 │       ├── tutor.js
 │       ├── estudiante.js
+│       ├── chat.js          # Lógica del chat
 │       └── main.js
 ├── .env                     # Variables de entorno
 ├── .gitignore
@@ -154,13 +159,27 @@ Tutorias FIS/
 - `GET /api/encuestas/tutoria/:id/promedios-preguntas` - Promedios por pregunta
 - `GET /api/encuestas/verificar/:id` - Verificar si respondió
 
+### Chat/Mensajería
+- `GET /api/mensajes/conversaciones` - Listar conversaciones del usuario
+- `GET /api/mensajes/tutoria/:id` - Obtener mensajes de una tutoría
+- `GET /api/mensajes/no-leidos` - Contar mensajes no leídos
+- `PUT /api/mensajes/:id/marcar-leido` - Marcar mensaje como leído
+
 ## ⚡ Eventos Socket.IO
 
+### Notificaciones Generales
 - `nuevaSolicitud` - Nueva solicitud de tutoría (Tutor)
 - `solicitudAceptada` - Solicitud aceptada (Estudiante)
 - `solicitudRechazada` - Solicitud rechazada (Estudiante)
 - `solicitudAprobada` - Usuario aprobado (Admin)
 - `nuevaTutoria` - Nueva tutoría creada (Todos)
+
+### Chat en Tiempo Real
+- `chat:enviar-mensaje` - Enviar mensaje en el chat
+- `chat:mensaje-enviado` - Confirmación de mensaje enviado
+- `chat:nuevo-mensaje` - Nuevo mensaje recibido
+- `chat:escribiendo` - Usuario está escribiendo
+- `chat:dejo-escribir` - Usuario dejó de escribir
 
 ## 🛠️ Funcionalidades Principales
 
@@ -176,6 +195,9 @@ Tutorias FIS/
 - ✅ Filtrar solicitudes por estado (HU-005)
 - ✅ Ver promedios de calificación de tutorías (HU-008)
 - ✅ Ver respuestas detalladas de encuestas
+- ✅ **Chat grupal con todos los estudiantes de cada tutoría**
+- ✅ **Indicador de mensajes no leídos**
+- ✅ **Ver lista de participantes por tutoría**
 
 ### Para Estudiantes
 - ✅ Consultar tutorías disponibles
@@ -184,6 +206,9 @@ Tutorias FIS/
 - ✅ Ver y gestionar solicitudes
 - ✅ Calificar tutorías completadas (HU-009)
 - ✅ Responder encuestas de calificación
+- ✅ **Chat en tiempo real con tutor y otros estudiantes**
+- ✅ **Notificaciones de nuevos mensajes**
+- ✅ **Indicador de "escribiendo..."**
 
 ## 📊 Base de Datos - MongoDB
 
@@ -193,15 +218,19 @@ Tutorias FIS/
 - **solicitudes** - Solicitudes de estudiantes a tutorías
 - **preguntas** - Preguntas de encuestas por materia
 - **respuestas** - Respuestas de estudiantes a encuestas
+- **mensajes** - Mensajes del chat grupal por tutoría
 
 ## 🎨 Diseño UI/UX
 
 - Bootstrap 5.3.0 para diseño responsive
 - Gradiente moderno (#667eea → #764ba2)
-- Iconos Bootstrap Icons
-- Animaciones CSS suaves
+- Iconos Bootstrap Icons y Font Awesome
+- Animaciones CSS suaves con keyframes
 - Tablas interactivas con hover effects
 - Modales para encuestas y formularios
+- **Interfaz de chat estilo WhatsApp con burbujas de mensajes**
+- **Scrollbar personalizado para mejor UX**
+- **Diseño adaptativo mobile-first para chat**
 
 ## 🔒 Seguridad
 
