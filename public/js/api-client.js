@@ -55,6 +55,24 @@ class APIClient {
         return this.request('/api/auth/session');
     }
 
+    static async forgotPassword(email) {
+        return this.request('/api/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+    }
+
+    static async resetPassword(token, newPassword) {
+        return this.request('/api/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ token, newPassword })
+        });
+    }
+
+    static async verifyResetToken(token) {
+        return this.request(`/api/auth/verify-reset-token/${token}`);
+    }
+
     // Admin endpoints
     static async getSolicitudesTutores() {
         return this.request('/api/admin/solicitudes/tutores');

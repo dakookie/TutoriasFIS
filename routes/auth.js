@@ -180,4 +180,135 @@ router.get('/session', (req, res) => {
     }
 });
 
+// POST /api/auth/forgot-password - Solicitar reseteo de contraseña
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Buscar usuario por email
+        const usuario = await Usuario.findOne({ email });
+        
+        if (!usuario) {
+            // Por seguridad, no revelar si el email existe o no
+            return res.json({
+                success: true,
+                message: 'Si el email existe, recibirás instrucciones para resetear tu contraseña'
+            });
+        }
+
+        // Generar token de reseteo (simulación - en producción usarías crypto)
+        const resetToken = Math.random().toString(36).substring(2, 15) + 
+                          Math.random().toString(36).substring(2, 15);
+        
+        // Guardar token y fecha de expiración (1 hora)
+        usuario.resetPasswordToken = resetToken;
+        usuario.resetPasswordExpires = Date.now() + 3600000; // 1 hora
+        await usuario.save();
+
+        // En producción, aquí enviarías un email
+        // Por ahora, devolvemos el token directamente (solo para desarrollo)
+        console.log(`Token de reseteo para ${email}: ${resetToken}`);
+        console.log(`URL de reseteo: http://localhost:3000/reset-password.html?token=${resetToken}`);
+
+        res.json({
+            success: true,
+            message: 'Si el email existe, recibirás instrucciones para resetear tu contraseña',
+            devToken: resetToken
+        });
+
+    } catch (error) {
+        console.error('Error en forgot-password:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al procesar la solicitud',
+            error: error.message
+        });
+    }
+});
+
+// POST /api/auth/reset-password - Resetear contraseña con token
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token y nueva contraseña son requeridos'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña debe tener al menos 6 caracteres'
+            });
+        }
+
+        // Buscar usuario con token válido y no expirado
+        const usuario = await Usuario.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!usuario) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token inválido o expirado'
+            });
+        }
+
+        // Actualizar contraseña y limpiar campos de reseteo
+        usuario.password = newPassword;
+        usuario.resetPasswordToken = null;
+        usuario.resetPasswordExpires = null;
+        await usuario.save();
+
+        res.json({
+            success: true,
+            message: 'Contraseña actualizada exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña.'
+        });
+
+    } catch (error) {
+        console.error('Error en reset-password:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al resetear la contraseña',
+            error: error.message
+        });
+    }
+});
+
+// GET /api/auth/verify-reset-token - Verificar si un token de reseteo es válido
+router.get('/verify-reset-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        const usuario = await Usuario.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!usuario) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token inválido o expirado'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Token válido',
+            email: usuario.email
+        });
+
+    } catch (error) {
+        console.error('Error en verify-reset-token:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al verificar el token'
+        });
+    }
+});
+
 module.exports = router;
