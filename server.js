@@ -60,6 +60,7 @@ app.use('/api/tutorias', require('./routes/tutorias'));
 app.use('/api/solicitudes', require('./routes/solicitudes'));
 app.use('/api/encuestas', require('./routes/encuestas'));
 app.use('/api/aula', require('./routes/aula'));
+app.use('/api/mensajes', require('./routes/mensajes'));
 
 // Ruta principal - Servir login.html (ANTES de static)
 app.get('/', (req, res) => {
@@ -150,6 +151,159 @@ io.on('connection', (socket) => {
             rol: user.rol
         });
     }
+
+    // Evento: Enviar mensaje de chat (grupal por tutoría)
+    socket.on('chat:enviar-mensaje', async (data) => {
+        try {
+            const { tutoriaId, receptorId, contenido } = data;
+            
+            if (!user || !user.userId) {
+                return socket.emit('chat:error', { message: 'Usuario no autenticado' });
+            }
+
+            // Validar datos
+            if (!tutoriaId || !contenido || !contenido.trim()) {
+                return socket.emit('chat:error', { message: 'Datos incompletos' });
+            }
+
+            // Obtener información de la tutoría y participantes
+            const Tutoria = require('./models/Tutoria');
+            const Solicitud = require('./models/Solicitud');
+            const Usuario = require('./models/Usuario');
+            const Mensaje = require('./models/Mensaje');
+            
+            const tutoria = await Tutoria.findById(tutoriaId).populate('tutor', 'nombre apellido');
+            
+            if (!tutoria) {
+                return socket.emit('chat:error', { message: 'Tutoría no encontrada' });
+            }
+
+            // Obtener todos los estudiantes aceptados en la tutoría
+            const solicitudesAceptadas = await Solicitud.find({
+                tutoria: tutoriaId,
+                estado: 'Aceptada'
+            }).populate('estudiante', '_id nombre apellido');
+
+            const estudiantes = solicitudesAceptadas.map(s => s.estudiante);
+
+            // Guardar mensajes para todos los participantes
+            const mensajesGuardados = [];
+            
+            if (user.rol === 'Tutor') {
+                // El tutor envía a todos los estudiantes
+                for (const estudiante of estudiantes) {
+                    const mensaje = new Mensaje({
+                        tutoria: tutoriaId,
+                        emisor: user.userId,
+                        emisorNombre: `${user.nombre} ${user.apellido}`,
+                        emisorRol: user.rol,
+                        receptor: estudiante._id,
+                        receptorNombre: `${estudiante.nombre} ${estudiante.apellido}`,
+                        contenido: contenido.trim()
+                    });
+                    await mensaje.save();
+                    mensajesGuardados.push(mensaje);
+                }
+            } else {
+                // El estudiante envía al tutor y también se guarda para otros estudiantes verlo
+                // Mensaje principal al tutor
+                const mensajeAlTutor = new Mensaje({
+                    tutoria: tutoriaId,
+                    emisor: user.userId,
+                    emisorNombre: `${user.nombre} ${user.apellido}`,
+                    emisorRol: user.rol,
+                    receptor: tutoria.tutor._id,
+                    receptorNombre: `${tutoria.tutor.nombre} ${tutoria.tutor.apellido}`,
+                    contenido: contenido.trim()
+                });
+                await mensajeAlTutor.save();
+                mensajesGuardados.push(mensajeAlTutor);
+                
+                // También guardar para otros estudiantes
+                for (const estudiante of estudiantes) {
+                    if (estudiante._id.toString() !== user.userId) {
+                        const mensaje = new Mensaje({
+                            tutoria: tutoriaId,
+                            emisor: user.userId,
+                            emisorNombre: `${user.nombre} ${user.apellido}`,
+                            emisorRol: user.rol,
+                            receptor: estudiante._id,
+                            receptorNombre: `${estudiante.nombre} ${estudiante.apellido}`,
+                            contenido: contenido.trim()
+                        });
+                        await mensaje.save();
+                        mensajesGuardados.push(mensaje);
+                    }
+                }
+            }
+
+            // Crear objeto de mensaje para enviar (usar el primero como referencia)
+            const mensajeReferencia = mensajesGuardados[0];
+            const mensajeEnviado = {
+                _id: mensajeReferencia._id,
+                tutoria: mensajeReferencia.tutoria,
+                emisor: mensajeReferencia.emisor,
+                emisorNombre: mensajeReferencia.emisorNombre,
+                emisorRol: mensajeReferencia.emisorRol,
+                contenido: mensajeReferencia.contenido,
+                leido: mensajeReferencia.leido,
+                createdAt: mensajeReferencia.createdAt
+            };
+
+            // Enviar confirmación SOLO al emisor
+            socket.emit('chat:mensaje-enviado', mensajeEnviado);
+
+            // Enviar a todos los OTROS participantes de la tutoría (no al emisor)
+            if (user.rol === 'Tutor') {
+                // Enviar a todos los estudiantes (no incluir al tutor emisor)
+                estudiantes.forEach(est => {
+                    io.to(`estudiante-${est._id}`).emit('chat:nuevo-mensaje', mensajeEnviado);
+                });
+                console.log(`💬 Tutor ${user.nombre} envió mensaje a ${estudiantes.length} estudiantes`);
+            } else {
+                // Enviar al tutor
+                io.to(`tutor-${tutoria.tutor._id}`).emit('chat:nuevo-mensaje', mensajeEnviado);
+                // Enviar a otros estudiantes (NO al emisor)
+                estudiantes.forEach(est => {
+                    if (est._id.toString() !== user.userId) {
+                        io.to(`estudiante-${est._id}`).emit('chat:nuevo-mensaje', mensajeEnviado);
+                    }
+                });
+                console.log(`💬 Estudiante ${user.nombre} envió mensaje al tutor y ${estudiantes.length - 1} otros estudiantes`);
+            }
+
+        } catch (error) {
+            console.error('Error al enviar mensaje:', error);
+            socket.emit('chat:error', { message: 'Error al enviar mensaje' });
+        }
+    });
+
+    // Evento: Usuario está escribiendo
+    socket.on('chat:escribiendo', (data) => {
+        const { tutoriaId, receptorId } = data;
+        if (receptorId) {
+            io.to(`tutor-${receptorId}`).to(`estudiante-${receptorId}`).emit('chat:usuario-escribiendo', {
+                tutoriaId,
+                usuario: {
+                    id: user.userId,
+                    nombre: `${user.nombre} ${user.apellido}`
+                }
+            });
+        }
+    });
+
+    // Evento: Usuario dejó de escribir
+    socket.on('chat:dejo-escribir', (data) => {
+        const { tutoriaId, receptorId } = data;
+        if (receptorId) {
+            io.to(`tutor-${receptorId}`).to(`estudiante-${receptorId}`).emit('chat:usuario-dejo-escribir', {
+                tutoriaId,
+                usuario: {
+                    id: user.userId
+                }
+            });
+        }
+    });
 
     socket.on('disconnect', () => {
         if (user && user.userId) {

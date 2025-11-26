@@ -317,3 +317,256 @@ body.auth-page {
 .email-info strong {
     color: #667eea;
 }
+
+/* ========================================
+   Estilos para el Chat
+   ======================================== */
+
+/* Panel de conversaciones */
+#conversaciones-panel {
+    background-color: #f8f9fa;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.conversaciones-list {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    min-height: 200px;
+    width: 100%;
+}
+
+.conversacion-item {
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    background-color: #ffffff;
+    display: block;
+    width: 100%;
+    min-height: 60px;
+    box-sizing: border-box;
+}
+
+.conversacion-item:hover {
+    background-color: #e9ecef;
+}
+
+.conversacion-item.activa {
+    background-color: #dee2e6;
+    border-left: 4px solid #667eea;
+}
+
+.conversacion-item h6 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.conversacion-item .ultimo-mensaje {
+    font-size: 13px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* Panel de chat */
+#chat-panel {
+    background-color: #ffffff;
+}
+
+.chat-header {
+    min-height: 70px;
+}
+
+.chat-header h6 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Área de mensajes */
+.chat-messages {
+    overflow-y: auto;
+    background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Estilos de mensajes */
+.mensaje {
+    display: flex;
+    margin-bottom: 8px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mensaje-content {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    word-wrap: break-word;
+}
+
+/* Mensaje propio (derecha) */
+.mensaje-propio {
+    justify-content: flex-end;
+}
+
+.mensaje-propio .mensaje-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.mensaje-propio .mensaje-hora {
+    text-align: right;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Mensaje de otro usuario (izquierda) */
+.mensaje-otro {
+    justify-content: flex-start;
+}
+
+.mensaje-otro .mensaje-content {
+    background-color: #e9ecef;
+    color: #333;
+    border-bottom-left-radius: 4px;
+}
+
+.mensaje-autor {
+    font-size: 11px;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+.mensaje-texto {
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.mensaje-hora {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+/* Input de mensaje */
+.chat-input-container {
+    background-color: #f8f9fa;
+}
+
+#input-mensaje {
+    border-radius: 20px;
+    padding: 10px 20px;
+    border: 1px solid #dee2e6;
+}
+
+#input-mensaje:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+#btn-enviar {
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+#btn-enviar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+}
+
+#contador-caracteres {
+    font-size: 12px;
+}
+
+/* Indicador de escritura */
+#usuario-escribiendo {
+    font-size: 12px;
+    padding: 4px 10px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Scrollbar personalizado para chat */
+.chat-messages::-webkit-scrollbar,
+.conversaciones-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track,
+.conversaciones-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.chat-messages::-webkit-scrollbar-thumb,
+.conversaciones-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover,
+.conversaciones-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Badge de mensajes no leídos */
+.badge.bg-danger {
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
+/* Sin selección */
+#sin-seleccion i {
+    color: #dee2e6;
+}
+
+/* Responsive para chat */
+@media (max-width: 767px) {
+    #conversaciones-panel.d-none {
+        display: none !important;
+    }
+
+    .mensaje-content {
+        max-width: 85%;
+    }
+
+    #chat-activo {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        z-index: 1000;
+    }
+}

@@ -265,4 +265,23 @@ class APIClient {
             method: 'DELETE'
         });
     }
+
+    // Mensajes endpoints
+    static async getMensajesTutoria(tutoriaId) {
+        return this.request(`/api/mensajes/tutoria/${tutoriaId}`);
+    }
+
+    static async getConversaciones() {
+        return this.request('/api/mensajes/conversaciones');
+    }
+
+    static async getMensajesNoLeidos() {
+        return this.request('/api/mensajes/no-leidos');
+    }
+
+    static async marcarMensajeLeido(mensajeId) {
+        return this.request(`/api/mensajes/${mensajeId}/marcar-leido`, {
+            method: 'PUT'
+        });
+    }
 }
