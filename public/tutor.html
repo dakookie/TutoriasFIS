@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor - Plataforma de Tutorías FIS</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <h3>Verificando sesión...</h3>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" href="#">Tutorías FIS - Tutor</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="tutor.html">Mis Tutorías</a>
+                        </li>
+                    </ul>
+                    <span class="navbar-text me-3" id="usuario-nombre">
+                        <!-- Se llenará dinámicamente -->
+                    </span>
+                    <button id="btn-logout" class="btn btn-danger btn-sm">Cerrar Sesión</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container my-5">
+            <h2 class="text-center mb-4">Panel de Tutor</h2>
+
+            <!-- Registrar nueva Tutoría -->
+            <div class="option-card mb-4">
+                <div class="card-header-custom">
+                    <h3 class="mb-0"><i class="bi bi-journal-plus me-2"></i>Registrar nueva Tutoría</h3>
+                </div>
+                <div class="card-body">
+                    <form id="form-registrar-tutoria">
+                        <div class="mb-3">
+                            <label for="materia" class="form-label">Materia *</label>
+                            <select id="materia" name="materia" class="form-select" required>
+                                <option value="">Selecciona una materia</option>
+                                <!-- Se llenará dinámicamente según las materias del tutor -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fecha" class="form-label">Fecha *</label>
+                            <input type="date" id="fecha" name="fecha" class="form-control" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="hora-inicio" class="form-label">Hora de Inicio *</label>
+                                <input type="time" id="hora-inicio" name="hora-inicio" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="hora-fin" class="form-label">Hora de Fin *</label>
+                                <input type="time" id="hora-fin" name="hora-fin" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cupos" class="form-label">Cupos Disponibles *</label>
+                            <input type="number" id="cupos" name="cupos" class="form-control" min="1" max="20" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Registrar</button>
+                        <div id="mensaje-registro" class="alert mt-3" style="display: none;"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tutorías Creadas -->
+            <div class="option-card">
+                <div class="card-header-custom">
+                    <h3 class="mb-0"><i class="bi bi-list-check me-2"></i>Tutorías Creadas</h3>
+                </div>
+                <div class="card-body">
+                    <!-- HU-005: Filtro por estado de solicitudes -->
+                    <div class="d-flex align-items-center mb-4">
+                        <label for="filtro-estado-solicitudes" class="form-label me-2 mb-0">Filtrar solicitudes por estado:</label>
+                        <select id="filtro-estado-solicitudes" class="form-select w-auto">
+                            <option value="Todas">Todas</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Aceptada">Aceptada</option>
+                            <option value="Rechazada">Rechazada</option>
+                        </select>
+                    </div>
+                    
+                    <div id="tutoria-creadas-lista" class="table-responsive">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Encuesta de Calificación (HU-009) -->
+        <div id="modal-encuesta" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="cerrarModalEncuesta()">&times;</span>
+                <h2 id="modal-encuesta-titulo">Calificar Tutoría</h2>
+                <div class="modal-body" id="modal-encuesta-body">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalEncuesta()">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-enviar-encuesta">Enviar Calificación</button>
+                </div>
+                <div id="error-encuesta" class="alert alert-danger mt-3" role="alert" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Modal para Editar Tutoría -->
+        <div id="modal-editar-tutoria" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="cerrarModalEditarTutoria()">&times;</span>
+                <h2>Editar Tutoría</h2>
+                <form id="form-editar-tutoria">
+                    <input type="hidden" id="editar-tutoria-id">
+                    <div class="mb-3">
+                        <label for="editar-materia" class="form-label">Materia</label>
+                        <input type="text" class="form-control" id="editar-materia" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-fecha" class="form-label">Fecha <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="editar-fecha" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editar-hora-inicio" class="form-label">Hora Inicio <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="editar-hora-inicio" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editar-hora-fin" class="form-label">Hora Fin <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="editar-hora-fin" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editar-cupos" class="form-label">Cupos <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="editar-cupos" min="1" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModalEditarTutoria()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmación para Eliminar -->
+        <div id="modal-confirmar-eliminar" class="modal">
+            <div class="modal-content">
+                <h2>Confirmar Eliminación</h2>
+                <p class="text-danger"><strong>¿Estás seguro de que deseas eliminar esta tutoría?</strong></p>
+                <p>Esta acción eliminará:</p>
+                <ul>
+                    <li>La tutoría de <strong id="eliminar-materia-nombre"></strong></li>
+                    <li>Todas las solicitudes asociadas</li>
+                    <li>Todo el contenido del aula virtual (publicaciones y bibliografías)</li>
+                    <li>Todas las calificaciones de encuestas</li>
+                </ul>
+                <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalConfirmarEliminar()">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar">Sí, Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/socket-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/tutor.js"></script>
+    <script src="js/main-tutor.js"></script>
+</body>
+</html>

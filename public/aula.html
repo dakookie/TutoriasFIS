@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula Virtual - Plataforma de Tutorías FIS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <h3>Cargando aula...</h3>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" href="#" id="nombre-tutoria">Aula Virtual</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="btn-volver">Volver</a>
+                        </li>
+                    </ul>
+                    <span class="navbar-text me-3" id="usuario-nombre"></span>
+                    <button id="btn-logout" class="btn btn-danger btn-sm">Cerrar Sesión</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container my-5">
+            <h2 class="text-center mb-4" id="titulo-aula">Aula Virtual</h2>
+
+            <!-- Tabs de navegación -->
+            <ul class="nav nav-tabs mb-4" id="aulaTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="informacion-tab" data-bs-toggle="tab" data-bs-target="#informacion" type="button" role="tab">
+                        <i class="bi bi-info-circle me-2"></i>Información
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="publicaciones-tab" data-bs-toggle="tab" data-bs-target="#publicaciones" type="button" role="tab">
+                        <i class="bi bi-megaphone me-2"></i>Publicaciones
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="bibliografia-tab" data-bs-toggle="tab" data-bs-target="#bibliografia" type="button" role="tab">
+                        <i class="bi bi-book me-2"></i>Bibliografía
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Contenido de las tabs -->
+            <div class="tab-content" id="aulaTabContent">
+                
+                <!-- Tab de Información -->
+                <div class="tab-pane fade show active" id="informacion" role="tabpanel">
+                    <div class="option-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4 class="mb-0">Aula virtual para la tutoría de <span id="info-materia"></span></h4>
+                                <button class="btn btn-primary btn-sm" id="btn-configurar-aula" style="display: none;">
+                                    <i class="bi bi-gear"></i> Configurar Aula
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" id="btn-editar-configuracion-aula" style="display: none;">
+                                    <i class="bi bi-pencil"></i> Editar Configuración
+                                </button>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <p class="mb-2"><strong>Modalidad de la Tutoría:</strong></p>
+                                    <p class="text-muted" id="info-modalidad">-</p>
+                                </div>
+                                <div class="col-md-6 mb-3" id="info-aula-container">
+                                    <p class="mb-2"><strong>Aula:</strong></p>
+                                    <p class="text-muted" id="info-aula">-</p>
+                                </div>
+                                <div class="col-md-6 mb-3" id="info-enlace-container" style="display: none;">
+                                    <p class="mb-2"><strong>Enlace de Reunión:</strong></p>
+                                    <p class="text-muted" id="info-enlace"><a href="#" target="_blank" id="link-reunion">-</a></p>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <p class="mb-2"><strong>Horario:</strong></p>
+                                    <p class="text-muted" id="info-horario">-</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <p class="mb-2"><strong>Tutor:</strong></p>
+                                    <p class="text-muted" id="info-tutor">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab de Publicaciones -->
+                <div class="tab-pane fade" id="publicaciones" role="tabpanel">
+                    <div class="option-card">
+                        <div class="card-header-custom">
+                            <h3 class="mb-0"><i class="bi bi-megaphone me-2"></i>Publicaciones</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Formulario para nueva publicación (solo tutor) -->
+                            <div id="form-nueva-publicacion" style="display: none;">
+                                <h5>Agregar Nueva Publicación</h5>
+                                <form id="publicacion-form">
+                                    <div class="mb-3">
+                                        <label for="titulo-publicacion" class="form-label">Título <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="titulo-publicacion" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contenido-publicacion" class="form-label">Contenido <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="contenido-publicacion" rows="4" required></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="imagen-publicacion" class="form-label">Imagen (Opcional)</label>
+                                        <input type="file" class="form-control" id="imagen-publicacion" accept=".png,.jpg,.jpeg,.gif">
+                                        <small class="text-muted">Solo se permiten imágenes (PNG, JPG, JPEG, GIF)</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Publicar</button>
+                                </form>
+                                <hr class="my-4">
+                            </div>
+
+                            <!-- Lista de publicaciones -->
+                            <div id="lista-publicaciones">
+                                <!-- Se llenará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab de Bibliografía -->
+                <div class="tab-pane fade" id="bibliografia" role="tabpanel">
+                    <div class="option-card">
+                        <div class="card-header-custom">
+                            <h3 class="mb-0"><i class="bi bi-book me-2"></i>Bibliografía</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Formulario para subir bibliografía (solo tutor) -->
+                            <div id="form-subir-bibliografia" style="display: none;">
+                                <h5>Subir Bibliografía</h5>
+                                <form id="bibliografia-form">
+                                    <div class="mb-3">
+                                        <label for="titulo-bibliografia" class="form-label">Título <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="titulo-bibliografia" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="archivo-bibliografia" class="form-label">Archivo de Documento <span class="text-danger">*</span></label>
+                                        <input type="file" class="form-control" id="archivo-bibliografia" accept=".pdf,.docx,.xlsx,.ppt,.pptx" required>
+                                        <small class="text-muted">Solo se permiten documentos: PDF, DOCX, XLSX, PPT, PPTX</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Subir Bibliografía</button>
+                                </form>
+                                <hr class="my-4">
+                            </div>
+
+                            <!-- Lista de bibliografías -->
+                            <div id="lista-bibliografias">
+                                <!-- Se llenará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuración del Aula -->
+    <div class="modal fade" id="modalConfiguracionAula" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titulo-modal-configuracion">Configurar Aula Virtual</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-4">Configura el aula virtual antes de comenzar. Esta información será visible para todos los estudiantes.</p>
+                    
+                    <form id="form-configurar-aula">
+                        <div class="mb-3">
+                            <label class="form-label">Modalidad de la Tutoría <span class="text-danger">*</span></label>
+                            <select class="form-select" id="modalidad-aula" required>
+                                <option value="">Seleccione la modalidad</option>
+                                <option value="Presencial">Presencial</option>
+                                <option value="Virtual">Virtual</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="campo-aula-presencial" style="display: none;">
+                            <label for="nombre-aula" class="form-label">Nombre del Aula <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre-aula" placeholder="Ej: E012, Lab 3, Aula 201">
+                        </div>
+
+                        <div class="mb-3" id="campo-enlace-virtual" style="display: none;">
+                            <label for="enlace-reunion" class="form-label">Enlace de la Reunión Virtual <span class="text-danger">*</span></label>
+                            <input type="url" class="form-control" id="enlace-reunion" placeholder="https://meet.google.com/xxx-xxxx-xxx">
+                            <small class="text-muted">Ingresa el enlace completo de Zoom, Google Meet, Teams, etc.</small>
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Esta configuración se mostrará en la pestaña de Información del aula.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btn-guardar-configuracion">
+                        <i class="bi bi-check-lg me-2"></i>Guardar Configuración
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Editar Publicación -->
+    <div class="modal fade" id="modalEditarPublicacion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Publicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-editar-publicacion">
+                        <input type="hidden" id="edit-publicacion-id">
+                        <div class="mb-3">
+                            <label for="edit-titulo-publicacion" class="form-label">Título <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit-titulo-publicacion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-contenido-publicacion" class="form-label">Contenido <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="edit-contenido-publicacion" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Imagen Actual</label>
+                            <div id="imagen-actual-container"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-imagen-publicacion" class="form-label">Nueva Imagen (Opcional)</label>
+                            <input type="file" class="form-control" id="edit-imagen-publicacion" accept=".png,.jpg,.jpeg,.gif">
+                            <small class="text-muted">Dejar vacío para mantener la imagen actual</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-guardar-editar-publicacion">
+                        <i class="bi bi-check-lg me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Editar Bibliografía -->
+    <div class="modal fade" id="modalEditarBibliografia" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Bibliografía</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-editar-bibliografia">
+                        <input type="hidden" id="edit-bibliografia-id">
+                        <div class="mb-3">
+                            <label for="edit-titulo-bibliografia" class="form-label">Título <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit-titulo-bibliografia" required>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Solo se puede editar el título. Para cambiar el archivo, debes eliminar y subir uno nuevo.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-guardar-editar-bibliografia">
+                        <i class="bi bi-check-lg me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/socket-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/aula.js"></script>
+</body>
+</html>

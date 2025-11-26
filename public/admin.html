@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador - Tutorías FIS</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        .tab-buttons {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 5px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">Tutorías FIS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active">Solicitud de Tutores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link">Solicitud de Estudiantes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link">Formularios de calificación</a>
+                    </li>
+                </ul>
+                <span class="navbar-text me-3" id="welcome-message">
+                    <!-- Se llenará dinámicamente -->
+                </span>
+                <button id="btn-logout" class="btn btn-danger btn-sm">Sign Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <!-- Main Content -->
+    <div class="container my-5">
+        <h2 class="text-center mb-4">Panel - Administrador</h2>
+        
+        <!-- Tabs -->
+        <div class="tab-buttons text-center">
+            <button class="tab-button active" data-tab="tutores">Solicitudes de Tutores</button>
+            <button class="tab-button" data-tab="estudiantes">Solicitudes de Estudiantes</button>
+            <button class="tab-button" data-tab="encuestas">Formularios de Calificación</button>
+        </div>
+
+        <!-- SECCIÓN SOLICITUDES DE TUTORES (HU-012) -->
+        <div id="tutores-section" class="tab-content active">
+            <div class="option-card">
+                <div class="card-header-custom">
+                    <h3 class="mb-0">Solicitudes de Tutores pendientes a revisión</h3>
+                </div>
+                <div class="card-body">
+                    <div id="lista-solicitudes-tutores" class="table-responsive">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN SOLICITUDES DE ESTUDIANTES (HU-002) -->
+        <div id="estudiantes-section" class="tab-content">
+            <div class="option-card">
+                <div class="card-header-custom">
+                    <h3 class="mb-0">Solicitudes de Estudiantes pendientes a revisión</h3>
+                </div>
+                <div class="card-body">
+                    <div id="lista-solicitudes-estudiantes" class="table-responsive">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN FORMULARIOS DE CALIFICACIÓN (HU-007) -->
+        <div id="encuestas-section" class="tab-content">
+            <div class="option-card mb-4">
+                <div class="card-header-custom">
+                    <h3 class="mb-0">Preguntas de formulario de calificación</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="materia-encuesta" class="form-label">Selecciona una Materia:</label>
+                        <select id="materia-encuesta" class="form-select">
+                            <option value="">Seleccionar materia</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="pregunta-encuesta" class="form-label">Pregunta para escala de Likert:</label>
+                        <textarea id="pregunta-encuesta" rows="3" class="form-control" placeholder="Escribe la pregunta de la encuesta"></textarea>
+                    </div>
+
+                    <button id="btn-guardar-pregunta" class="btn btn-primary">Guardar Pregunta</button>
+                    <div id="error-pregunta" class="alert alert-danger mt-3" role="alert" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="option-card">
+                <div class="card-header-custom">
+                    <h3 class="mb-0">Preguntas de la Materia Seleccionada</h3>
+                </div>
+                <div class="card-body">
+                    <div id="lista-preguntas">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver PDF y gestionar solicitud -->
+    <div id="modal-solicitud" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close">&times;</span>
+            <h2 id="modal-titulo">Revisar Solicitud</h2>
+            
+            <div class="modal-body">
+                <div class="solicitud-detalle" id="detalle-solicitud">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <div class="pdf-viewer">
+                    <h3>Documento Adjunto</h3>
+                    <div id="pdf-container">
+                        <embed id="pdf-embed" type="application/pdf" width="100%" height="500px">
+                    </div>
+                </div>
+
+                <!-- Sección de materias (solo para tutores) -->
+                <div id="seccion-materias" style="display: none;">
+                    <h3>Asignar Materias al Tutor</h3>
+                    <div class="materias-grid" id="grid-materias">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    <span class="error-message" id="error-materias"></span>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-success" id="btn-aprobar">Aprobar</button>
+                    <button class="btn btn-danger" id="btn-rechazar">Rechazar</button>
+                    <button class="btn btn-secondary" id="btn-cerrar-modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver PDF -->
+    <div id="modal-pdf" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 90%; max-width: 1000px;">
+            <span class="close">&times;</span>
+            <h2>Documento PDF</h2>
+            <div class="modal-body">
+                <iframe id="pdf-viewer" style="width: 100%; height: 600px; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/socket-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

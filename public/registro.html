@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Plataforma de Tutorías FIS</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <header class="auth-header">
+                <h1>Plataforma de Tutorías FIS</h1>
+                <p>Sistema de gestión de tutorías - Ingeniería de Software EPN</p>
+            </header>
+
+            <div class="auth-content">
+                <h2>Registro de Usuario</h2>
+                
+                <form id="form-registro">
+                    <div class="form-group">
+                        <label for="nombre">Nombre *</label>
+                        <input type="text" id="nombre" name="nombre" required 
+                               placeholder="Ingresa tu nombre">
+                        <span class="error-message" id="error-nombre"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apellido">Apellido *</label>
+                        <input type="text" id="apellido" name="apellido" required 
+                               placeholder="Ingresa tu apellido">
+                        <span class="error-message" id="error-apellido"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="correo">Correo Institucional *</label>
+                        <input type="email" id="correo" name="correo" required 
+                               placeholder="ejemplo@epn.edu.ec">
+                        <span class="error-message" id="error-correo"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rol">Rol *</label>
+                        <select id="rol" name="rol" required>
+                            <option value="">Selecciona un rol</option>
+                            <option value="Estudiante">Estudiante</option>
+                            <option value="Tutor">Tutor</option>
+                        </select>
+                    </div>
+
+                    <!-- Campo de materias (solo para tutores) -->
+                    <div class="form-group" id="grupo-materias" style="display: none;">
+                        <label for="materias">Materias que enseñas *</label>
+                        <input type="text" id="materias" name="materias" 
+                               placeholder="Ej: Matemáticas, Física, Química (separadas por comas)">
+                        <span class="error-message" id="error-materias"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="usuario">Nombre de Usuario *</label>
+                        <input type="text" id="usuario" name="usuario" required 
+                               placeholder="Ingresa tu nombre de usuario">
+                        <span class="error-message" id="error-usuario"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Contraseña *</label>
+                        <input type="password" id="password" name="password" required 
+                               placeholder="Mínimo 8 caracteres">
+                        <span class="error-message" id="error-password"></span>
+                    </div>
+
+                    <!-- Campo de archivo (se muestra según el rol) -->
+                    <div class="form-group" id="grupo-archivo" style="display: none;">
+                        <label for="archivo" id="label-archivo">Documento PDF *</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="archivo" name="archivo" accept=".pdf">
+                            <label for="archivo" class="file-upload-label">
+                                <span class="file-upload-icon">📄</span>
+                                <span class="file-upload-text" id="nombre-archivo">Seleccionar archivo PDF</span>
+                            </label>
+                        </div>
+                        <span class="error-message" id="error-archivo"></span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Registrar</button>
+                        <button type="button" class="btn btn-secondary" id="btn-cancelar">Cancelar</button>
+                    </div>
+
+                    <div id="mensaje-registro" class="mensaje"></div>
+                </form>
+
+                <div class="auth-footer">
+                    <p>¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/socket-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/registro.js"></script>
+</body>
+</html>
