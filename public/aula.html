@@ -4,104 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aula Virtual - Plataforma de Tutorías FIS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/app.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .fade.show {
+            opacity: 1;
+        }
+        .tab-content > .tab-pane {
+            display: none;
+        }
+        .tab-content > .active {
+            display: block;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50">
     <!-- Loading Screen -->
-    <div id="loading-screen">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Cargando...</span>
-        </div>
-        <h3>Cargando aula...</h3>
+    <div id="loading-screen" class="fixed inset-0 bg-gray-800 flex flex-col items-center justify-center z-50">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+        <h3 class="text-white text-xl mt-4 font-light">Cargando aula...</h3>
     </div>
 
     <!-- Main Content -->
-    <div id="main-content">
+    <div id="main-content" class="hidden">
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" href="#" id="nombre-tutoria">Aula Virtual</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" id="btn-volver">Volver</a>
-                        </li>
-                    </ul>
-                    <span class="navbar-text me-3" id="usuario-nombre"></span>
-                    <button id="btn-logout" class="btn btn-danger btn-sm">Cerrar Sesión</button>
+        <nav class="bg-gray-100 shadow-sm border-b border-gray-200">
+            <div class="px-6 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-8">
+                        <a class="text-xl font-semibold text-gray-800" href="#" id="nombre-tutoria">Aula Virtual</a>
+                        <div class="hidden md:flex">
+                            <a class="text-gray-700 hover:text-gray-900 font-medium" href="#" id="btn-volver">Volver</a>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-700 text-sm font-medium" id="usuario-nombre"></span>
+                        <button id="btn-logout" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md text-sm font-medium transition">
+                            Cerrar Sesión
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <div class="container my-5">
-            <h2 class="text-center mb-4" id="titulo-aula">Aula Virtual</h2>
+        <div class="container mx-auto px-4 py-8" style="max-width: 95%;">
+            <h2 class="text-4xl font-bold text-center text-gray-800 mb-8" id="titulo-aula">Aula Virtual</h2>
 
             <!-- Tabs de navegación -->
-            <ul class="nav nav-tabs mb-4" id="aulaTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="informacion-tab" data-bs-toggle="tab" data-bs-target="#informacion" type="button" role="tab">
-                        <i class="bi bi-info-circle me-2"></i>Información
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="publicaciones-tab" data-bs-toggle="tab" data-bs-target="#publicaciones" type="button" role="tab">
-                        <i class="bi bi-megaphone me-2"></i>Publicaciones
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="bibliografia-tab" data-bs-toggle="tab" data-bs-target="#bibliografia" type="button" role="tab">
-                        <i class="bi bi-book me-2"></i>Bibliografía
-                    </button>
-                </li>
-            </ul>
+            <div class="mb-6">
+                <ul class="flex border-b border-gray-300" id="aulaTabs" role="tablist">
+                    <li class="mr-1" role="presentation">
+                        <button class="inline-block py-3 px-6 text-gray-700 font-medium hover:text-gray-900 border-b-2 border-transparent hover:border-gray-400 focus:outline-none active" 
+                                id="informacion-tab" 
+                                data-tab="informacion" 
+                                type="button" 
+                                role="tab">
+                            <svg class="inline-block w-5 h-5 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Información
+                        </button>
+                    </li>
+                    <li class="mr-1" role="presentation">
+                        <button class="inline-block py-3 px-6 text-gray-700 font-medium hover:text-gray-900 border-b-2 border-transparent hover:border-gray-400 focus:outline-none" 
+                                id="publicaciones-tab" 
+                                data-tab="publicaciones" 
+                                type="button" 
+                                role="tab">
+                            <svg class="inline-block w-5 h-5 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                            </svg>
+                            Publicaciones
+                        </button>
+                    </li>
+                    <li class="mr-1" role="presentation">
+                        <button class="inline-block py-3 px-6 text-gray-700 font-medium hover:text-gray-900 border-b-2 border-transparent hover:border-gray-400 focus:outline-none" 
+                                id="bibliografia-tab" 
+                                data-tab="bibliografia" 
+                                type="button" 
+                                role="tab">
+                            <svg class="inline-block w-5 h-5 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            Bibliografía
+                        </button>
+                    </li>
+                </ul>
+            </div>
 
             <!-- Contenido de las tabs -->
             <div class="tab-content" id="aulaTabContent">
                 
                 <!-- Tab de Información -->
                 <div class="tab-pane fade show active" id="informacion" role="tabpanel">
-                    <div class="option-card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h4 class="mb-0">Aula virtual para la tutoría de <span id="info-materia"></span></h4>
-                                <button class="btn btn-primary btn-sm" id="btn-configurar-aula" style="display: none;">
-                                    <i class="bi bi-gear"></i> Configurar Aula
-                                </button>
-                                <button class="btn btn-outline-primary btn-sm" id="btn-editar-configuracion-aula" style="display: none;">
-                                    <i class="bi bi-pencil"></i> Editar Configuración
-                                </button>
+                    <div class="bg-white rounded-lg shadow-md p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <h4 class="text-2xl font-semibold text-gray-800">Aula virtual para la tutoría de <span id="info-materia"></span></h4>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition hidden" id="btn-configurar-aula">
+                                <svg class="inline-block w-4 h-4 mr-1 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Configurar Aula
+                            </button>
+                            <button class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium transition hidden" id="btn-editar-configuracion-aula">
+                                <svg class="inline-block w-4 h-4 mr-1 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Editar Configuración
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700 mb-2">Modalidad de la Tutoría:</p>
+                                <p class="text-gray-600" id="info-modalidad">-</p>
                             </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <p class="mb-2"><strong>Modalidad de la Tutoría:</strong></p>
-                                    <p class="text-muted" id="info-modalidad">-</p>
-                                </div>
-                                <div class="col-md-6 mb-3" id="info-aula-container">
-                                    <p class="mb-2"><strong>Aula:</strong></p>
-                                    <p class="text-muted" id="info-aula">-</p>
-                                </div>
-                                <div class="col-md-6 mb-3" id="info-enlace-container" style="display: none;">
-                                    <p class="mb-2"><strong>Enlace de Reunión:</strong></p>
-                                    <p class="text-muted" id="info-enlace"><a href="#" target="_blank" id="link-reunion">-</a></p>
-                                </div>
+                            <div id="info-aula-container">
+                                <p class="text-sm font-semibold text-gray-700 mb-2">Aula:</p>
+                                <p class="text-gray-600" id="info-aula">-</p>
                             </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <p class="mb-2"><strong>Horario:</strong></p>
-                                    <p class="text-muted" id="info-horario">-</p>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <p class="mb-2"><strong>Tutor:</strong></p>
-                                    <p class="text-muted" id="info-tutor">-</p>
-                                </div>
+                            <div id="info-enlace-container" class="hidden">
+                                <p class="text-sm font-semibold text-gray-700 mb-2">Enlace de Reunión:</p>
+                                <p class="text-gray-600" id="info-enlace"><a href="#" target="_blank" id="link-reunion">-</a></p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700 mb-2">Horario:</p>
+                                <p class="text-gray-600" id="info-horario">-</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700 mb-2">Tutor:</p>
+                                <p class="text-gray-600" id="info-tutor">-</p>
                             </div>
                         </div>
                     </div>
@@ -109,70 +150,108 @@
 
                 <!-- Tab de Publicaciones -->
                 <div class="tab-pane fade" id="publicaciones" role="tabpanel">
-                    <div class="option-card">
-                        <div class="card-header-custom">
-                            <h3 class="mb-0"><i class="bi bi-megaphone me-2"></i>Publicaciones</h3>
+                    <div class="bg-white rounded-lg shadow-md p-8">
+                        <div class="mb-6">
+                            <h3 class="text-2xl font-semibold text-gray-800 flex items-center">
+                                <svg class="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                                </svg>
+                                Publicaciones
+                            </h3>
                         </div>
-                        <div class="card-body">
-                            <!-- Formulario para nueva publicación (solo tutor) -->
-                            <div id="form-nueva-publicacion" style="display: none;">
-                                <h5>Agregar Nueva Publicación</h5>
-                                <form id="publicacion-form">
-                                    <div class="mb-3">
-                                        <label for="titulo-publicacion" class="form-label">Título <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="titulo-publicacion" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="contenido-publicacion" class="form-label">Contenido <span class="text-danger">*</span></label>
-                                        <textarea class="form-control" id="contenido-publicacion" rows="4" required></textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="imagen-publicacion" class="form-label">Imagen (Opcional)</label>
-                                        <input type="file" class="form-control" id="imagen-publicacion" accept=".png,.jpg,.jpeg,.gif">
-                                        <small class="text-muted">Solo se permiten imágenes (PNG, JPG, JPEG, GIF)</small>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Publicar</button>
-                                </form>
-                                <hr class="my-4">
-                            </div>
+                        
+                        <!-- Formulario para nueva publicación (solo tutor) -->
+                        <div id="form-nueva-publicacion" class="hidden mb-8">
+                            <h5 class="text-lg font-semibold text-gray-800 mb-4">Agregar Nueva Publicación</h5>
+                            <form id="publicacion-form" class="space-y-4">
+                                <div>
+                                    <label for="titulo-publicacion" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Título <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           id="titulo-publicacion" 
+                                           required>
+                                </div>
+                                <div>
+                                    <label for="contenido-publicacion" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Contenido <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                              id="contenido-publicacion" 
+                                              rows="4" 
+                                              required></textarea>
+                                </div>
+                                <div>
+                                    <label for="imagen-publicacion" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Imagen (Opcional)
+                                    </label>
+                                    <input type="file" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           id="imagen-publicacion" 
+                                           accept=".png,.jpg,.jpeg,.gif">
+                                    <small class="text-gray-500 text-sm">Solo se permiten imágenes (PNG, JPG, JPEG, GIF)</small>
+                                </div>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition">
+                                    Publicar
+                                </button>
+                            </form>
+                            <hr class="my-6 border-gray-300">
+                        </div>
 
-                            <!-- Lista de publicaciones -->
-                            <div id="lista-publicaciones">
-                                <!-- Se llenará dinámicamente -->
-                            </div>
+                        <!-- Lista de publicaciones -->
+                        <div id="lista-publicaciones">
+                            <!-- Se llenará dinámicamente -->
                         </div>
                     </div>
                 </div>
 
                 <!-- Tab de Bibliografía -->
                 <div class="tab-pane fade" id="bibliografia" role="tabpanel">
-                    <div class="option-card">
-                        <div class="card-header-custom">
-                            <h3 class="mb-0"><i class="bi bi-book me-2"></i>Bibliografía</h3>
+                    <div class="bg-white rounded-lg shadow-md p-8">
+                        <div class="mb-6">
+                            <h3 class="text-2xl font-semibold text-gray-800 flex items-center">
+                                <svg class="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                                Bibliografía
+                            </h3>
                         </div>
-                        <div class="card-body">
-                            <!-- Formulario para subir bibliografía (solo tutor) -->
-                            <div id="form-subir-bibliografia" style="display: none;">
-                                <h5>Subir Bibliografía</h5>
-                                <form id="bibliografia-form">
-                                    <div class="mb-3">
-                                        <label for="titulo-bibliografia" class="form-label">Título <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="titulo-bibliografia" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="archivo-bibliografia" class="form-label">Archivo de Documento <span class="text-danger">*</span></label>
-                                        <input type="file" class="form-control" id="archivo-bibliografia" accept=".pdf,.docx,.xlsx,.ppt,.pptx" required>
-                                        <small class="text-muted">Solo se permiten documentos: PDF, DOCX, XLSX, PPT, PPTX</small>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Subir Bibliografía</button>
-                                </form>
-                                <hr class="my-4">
-                            </div>
+                        
+                        <!-- Formulario para subir bibliografía (solo tutor) -->
+                        <div id="form-subir-bibliografia" class="hidden mb-8">
+                            <h5 class="text-lg font-semibold text-gray-800 mb-4">Subir Bibliografía</h5>
+                            <form id="bibliografia-form" class="space-y-4">
+                                <div>
+                                    <label for="titulo-bibliografia" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Título <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           id="titulo-bibliografia" 
+                                           required>
+                                </div>
+                                <div>
+                                    <label for="archivo-bibliografia" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Archivo de Documento <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="file" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           id="archivo-bibliografia" 
+                                           accept=".pdf,.docx,.xlsx,.ppt,.pptx" 
+                                           required>
+                                    <small class="text-gray-500 text-sm">Solo se permiten documentos: PDF, DOCX, XLSX, PPT, PPTX</small>
+                                </div>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition">
+                                    Subir Bibliografía
+                                </button>
+                            </form>
+                            <hr class="my-6 border-gray-300">
+                        </div>
 
-                            <!-- Lista de bibliografías -->
-                            <div id="lista-bibliografias">
-                                <!-- Se llenará dinámicamente -->
-                            </div>
+                        <!-- Lista de bibliografías -->
+                        <div id="lista-bibliografias">
+                            <!-- Se llenará dinámicamente -->
                         </div>
                     </div>
                 </div>
@@ -182,128 +261,197 @@
     </div>
 
     <!-- Modal de Configuración del Aula -->
-    <div class="modal fade" id="modalConfiguracionAula" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="titulo-modal-configuracion">Configurar Aula Virtual</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div id="modalConfiguracionAula" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-2xl font-bold text-gray-800" id="titulo-modal-configuracion">Configurar Aula Virtual</h5>
+                <button type="button" class="text-gray-400 hover:text-gray-600" onclick="cerrarModalConfiguracion()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <p class="text-gray-600 text-sm">Configura el aula virtual antes de comenzar. Esta información será visible para todos los estudiantes.</p>
+            </div>
+            
+            <form id="form-configurar-aula" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Modalidad de la Tutoría <span class="text-red-500">*</span>
+                    </label>
+                    <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" 
+                            id="modalidad-aula" 
+                            required>
+                        <option value="">Seleccione la modalidad</option>
+                        <option value="Presencial">Presencial</option>
+                        <option value="Virtual">Virtual</option>
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <p class="text-muted mb-4">Configura el aula virtual antes de comenzar. Esta información será visible para todos los estudiantes.</p>
-                    
-                    <form id="form-configurar-aula">
-                        <div class="mb-3">
-                            <label class="form-label">Modalidad de la Tutoría <span class="text-danger">*</span></label>
-                            <select class="form-select" id="modalidad-aula" required>
-                                <option value="">Seleccione la modalidad</option>
-                                <option value="Presencial">Presencial</option>
-                                <option value="Virtual">Virtual</option>
-                            </select>
-                        </div>
 
-                        <div class="mb-3" id="campo-aula-presencial" style="display: none;">
-                            <label for="nombre-aula" class="form-label">Nombre del Aula <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nombre-aula" placeholder="Ej: E012, Lab 3, Aula 201">
-                        </div>
-
-                        <div class="mb-3" id="campo-enlace-virtual" style="display: none;">
-                            <label for="enlace-reunion" class="form-label">Enlace de la Reunión Virtual <span class="text-danger">*</span></label>
-                            <input type="url" class="form-control" id="enlace-reunion" placeholder="https://meet.google.com/xxx-xxxx-xxx">
-                            <small class="text-muted">Ingresa el enlace completo de Zoom, Google Meet, Teams, etc.</small>
-                        </div>
-
-                        <div class="alert alert-info mt-3">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <small>Esta configuración se mostrará en la pestaña de Información del aula.</small>
-                        </div>
-                    </form>
+                <div id="campo-aula-presencial" class="hidden">
+                    <label for="nombre-aula" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre del Aula <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           id="nombre-aula" 
+                           placeholder="Ej: E012, Lab 3, Aula 201">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="btn-guardar-configuracion">
-                        <i class="bi bi-check-lg me-2"></i>Guardar Configuración
-                    </button>
+
+                <div id="campo-enlace-virtual" class="hidden">
+                    <label for="enlace-reunion" class="block text-sm font-medium text-gray-700 mb-2">
+                        Enlace de la Reunión Virtual <span class="text-red-500">*</span>
+                    </label>
+                    <input type="url" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           id="enlace-reunion" 
+                           placeholder="https://meet.google.com/xxx-xxxx-xxx">
+                    <small class="text-gray-500 text-sm">Ingresa el enlace completo de Zoom, Google Meet, Teams, etc.</small>
                 </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <svg class="inline-block w-5 h-5 text-blue-600 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <small class="text-blue-700">Esta configuración se mostrará en la pestaña de Información del aula.</small>
+                </div>
+            </form>
+            
+            <div class="flex justify-end mt-6">
+                <button type="button" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition" 
+                        id="btn-guardar-configuracion">
+                    <svg class="inline-block w-4 h-4 mr-1 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Guardar Configuración
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Modal de Editar Publicación -->
-    <div class="modal fade" id="modalEditarPublicacion" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Publicación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div id="modalEditarPublicacion" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-2xl font-bold text-gray-800">Editar Publicación</h5>
+                <button type="button" class="text-gray-400 hover:text-gray-600" onclick="cerrarModalEditarPublicacion()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="form-editar-publicacion" class="space-y-4">
+                <input type="hidden" id="edit-publicacion-id">
+                <div>
+                    <label for="edit-titulo-publicacion" class="block text-sm font-medium text-gray-700 mb-2">
+                        Título <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           id="edit-titulo-publicacion" 
+                           required>
                 </div>
-                <div class="modal-body">
-                    <form id="form-editar-publicacion">
-                        <input type="hidden" id="edit-publicacion-id">
-                        <div class="mb-3">
-                            <label for="edit-titulo-publicacion" class="form-label">Título <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit-titulo-publicacion" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit-contenido-publicacion" class="form-label">Contenido <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="edit-contenido-publicacion" rows="4" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Imagen Actual</label>
-                            <div id="imagen-actual-container"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit-imagen-publicacion" class="form-label">Nueva Imagen (Opcional)</label>
-                            <input type="file" class="form-control" id="edit-imagen-publicacion" accept=".png,.jpg,.jpeg,.gif">
-                            <small class="text-muted">Dejar vacío para mantener la imagen actual</small>
-                        </div>
-                    </form>
+                <div>
+                    <label for="edit-contenido-publicacion" class="block text-sm font-medium text-gray-700 mb-2">
+                        Contenido <span class="text-red-500">*</span>
+                    </label>
+                    <textarea class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                              id="edit-contenido-publicacion" 
+                              rows="4" 
+                              required></textarea>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btn-guardar-editar-publicacion">
-                        <i class="bi bi-check-lg me-2"></i>Guardar Cambios
-                    </button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Imagen Actual</label>
+                    <div id="imagen-actual-container"></div>
                 </div>
+                <div>
+                    <label for="edit-imagen-publicacion" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nueva Imagen (Opcional)
+                    </label>
+                    <input type="file" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           id="edit-imagen-publicacion" 
+                           accept=".png,.jpg,.jpeg,.gif">
+                    <small class="text-gray-500 text-sm">Dejar vacío para mantener la imagen actual</small>
+                </div>
+            </form>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" 
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium transition" 
+                        onclick="cerrarModalEditarPublicacion()">
+                    Cancelar
+                </button>
+                <button type="button" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition" 
+                        id="btn-guardar-editar-publicacion">
+                    <svg class="inline-block w-4 h-4 mr-1 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Guardar Cambios
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Modal de Editar Bibliografía -->
-    <div class="modal fade" id="modalEditarBibliografia" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Bibliografía</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div id="modalEditarBibliografia" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-2xl font-bold text-gray-800">Editar Bibliografía</h5>
+                <button type="button" class="text-gray-400 hover:text-gray-600" onclick="cerrarModalEditarBibliografia()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="form-editar-bibliografia" class="space-y-4">
+                <input type="hidden" id="edit-bibliografia-id">
+                <div>
+                    <label for="edit-titulo-bibliografia" class="block text-sm font-medium text-gray-700 mb-2">
+                        Título <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           id="edit-titulo-bibliografia" 
+                           required>
                 </div>
-                <div class="modal-body">
-                    <form id="form-editar-bibliografia">
-                        <input type="hidden" id="edit-bibliografia-id">
-                        <div class="mb-3">
-                            <label for="edit-titulo-bibliografia" class="form-label">Título <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit-titulo-bibliografia" required>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <small>Solo se puede editar el título. Para cambiar el archivo, debes eliminar y subir uno nuevo.</small>
-                        </div>
-                    </form>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <svg class="inline-block w-5 h-5 text-blue-600 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <small class="text-blue-700">Solo se puede editar el título. Para cambiar el archivo, debes eliminar y subir uno nuevo.</small>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btn-guardar-editar-bibliografia">
-                        <i class="bi bi-check-lg me-2"></i>Guardar Cambios
-                    </button>
-                </div>
+            </form>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" 
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-lg font-medium transition" 
+                        onclick="cerrarModalEditarBibliografia()">
+                    Cancelar
+                </button>
+                <button type="button" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition" 
+                        id="btn-guardar-editar-bibliografia">
+                    <svg class="inline-block w-4 h-4 mr-1 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Guardar Cambios
+                </button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/api-client.js"></script>
     <script src="js/socket-client.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/aula-modal-helpers.js"></script>
     <script src="js/aula.js"></script>
 </body>
 </html>

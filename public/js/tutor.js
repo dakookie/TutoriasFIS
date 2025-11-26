@@ -5,12 +5,42 @@
 
 let filtroEstadoSolicitudes = 'Todas';
 
+// Cargar materias dinámicamente para el formulario de tutoría
+async function cargarMateriasParaTutoria() {
+    try {
+        const materias = await APIClient.obtenerMaterias();
+        const materiaSelect = document.getElementById('materia');
+        
+        materiaSelect.innerHTML = '<option value="">Selecciona una materia</option>';
+        materias.forEach(materia => {
+            const option = document.createElement('option');
+            option.value = materia._id;
+            option.textContent = materia.nombre;
+            option.dataset.nombre = materia.nombre;
+            materiaSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error al cargar materias:', error);
+        mostrarNotificacion('Error', 'No se pudieron cargar las materias', 'error');
+    }
+}
+
 // Inicializar filtro de estado de solicitudes
 function inicializarFiltroEstadoSolicitudes() {
     const filtroSelect = document.getElementById('filtro-estado-solicitudes');
     if (!filtroSelect) return;
 
-    filtroSelect.addEventListener('change', async function() {
+    // Establecer el valor actual del filtro en el select
+    filtroSelect.value = filtroEstadoSolicitudes;
+
+    // Remover listeners anteriores
+    const newFiltroSelect = filtroSelect.cloneNode(true);
+    filtroSelect.parentNode.replaceChild(newFiltroSelect, filtroSelect);
+
+    // Restaurar el valor seleccionado
+    newFiltroSelect.value = filtroEstadoSolicitudes;
+
+    newFiltroSelect.addEventListener('change', async function() {
         filtroEstadoSolicitudes = this.value;
         const sesion = await obtenerSesion();
         await cargarTutoriasCreadas(sesion);
@@ -22,16 +52,8 @@ function inicializarFormularioTutoria(sesion) {
     const mensajeDiv = document.getElementById('mensaje-registro');
     const materiaSelect = document.getElementById('materia');
 
-    // Cargar solo las materias que el tutor puede impartir
-    if (sesion && sesion.materias && sesion.materias.length > 0) {
-        materiaSelect.innerHTML = '<option value="">Selecciona una materia</option>';
-        sesion.materias.forEach(materia => {
-            const option = document.createElement('option');
-            option.value = materia;
-            option.textContent = materia;
-            materiaSelect.appendChild(option);
-        });
-    }
+    // Cargar materias desde la API
+    cargarMateriasParaTutoria();
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -100,6 +122,7 @@ function inicializarFormularioTutoria(sesion) {
 // Cargar y mostrar tutorías creadas por el tutor
 async function cargarTutoriasCreadas(sesion) {
     const container = document.getElementById('tutoria-creadas-lista');
+    const solicitudesContainer = document.getElementById('solicitudes-lista');
     
     if (!sesion) {
         sesion = await obtenerSesion();
@@ -111,12 +134,11 @@ async function cargarTutoriasCreadas(sesion) {
     inicializarFiltroEstadoSolicitudes();
     
     try {
-        // Usar userId en lugar de _id
         const tutorId = sesion?.userId || sesion?._id;
         
         if (!tutorId) {
             console.error('No se pudo obtener el ID del tutor de la sesión:', sesion);
-            container.innerHTML = '<div class="alert alert-danger">Error: No se pudo identificar al tutor</div>';
+            container.innerHTML = '<div class="text-center text-red-600 py-4">Error: No se pudo identificar al tutor</div>';
             return;
         }
         
@@ -124,88 +146,192 @@ async function cargarTutoriasCreadas(sesion) {
         const tutorias = response.tutorias;
 
         if (tutorias.length === 0) {
-            container.innerHTML = '<div class="alert alert-warning text-center">No tiene tutorías creadas</div>';
+            container.innerHTML = '<div class="text-center text-gray-600 py-8">No tiene tutorías creadas</div>';
             return;
         }
 
-        let html = '<table class="table table-striped table-bordered table-hover"><thead><tr><th>Materia</th><th>Fecha</th><th>Hora Inicio</th><th>Hora Fin</th><th>Cupos</th><th>Promedio</th><th>Aula</th><th>Encuesta</th><th>Acciones</th></tr></thead><tbody>';
-        
-        let hayTutoriasConSolicitudes = false;
+        // Generar tabla de tutorías
+        let html = `
+            <div class="overflow-x-auto">
+                <table class="w-full bg-white border border-gray-200 text-xs table-fixed">
+                    <thead class="bg-blue-100">
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 border-b" style="width: 6%;">ID</th>
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 border-b" style="width: 12%;">Materia</th>
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 border-b" style="width: 8%;">Fecha</th>
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 border-b" style="width: 10%;">Estado de publicación</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b" style="width: 7%;">Cupos Totales</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b" style="width: 7%;">Cupos Aceptados</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b" style="width: 9%;">Aula</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b" style="width: 10%;">Publicar Tutoría</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b" style="width: 10%;">Editar Tutoría</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b" style="width: 9%;">Promedio Calificación</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b" style="width: 12%;">Calificaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
         
         for (const tutoria of tutorias) {
             const solicitudesResponse = await APIClient.getSolicitudesTutoria(tutoria._id);
-            let solicitudesSinFiltro = solicitudesResponse.solicitudes;
-            let solicitudes = solicitudesSinFiltro;
+            const todasSolicitudes = solicitudesResponse.solicitudes;
+            const cuposAceptados = todasSolicitudes.filter(s => s.estado === 'Aceptada').length;
             
-            // Aplicar filtro de estado (HU-005)
-            if (filtroEstadoSolicitudes && filtroEstadoSolicitudes !== 'Todas') {
-                solicitudes = solicitudesSinFiltro.filter(s => s.estado === filtroEstadoSolicitudes);
-            }
+            // Calcular promedio de calificación
+            const promedioResponse = await APIClient.getPromedioTutoria(tutoria._id);
+            const promedioCalificacion = promedioResponse.promedio || 0;
             
-            // Si hay al menos una solicitud que cumple el filtro
-            if (solicitudes.length > 0 || filtroEstadoSolicitudes === 'Todas') {
-                hayTutoriasConSolicitudes = true;
-                
-                // Calcular promedio de calificación (HU-008)
-                const promedioResponse = await APIClient.getPromedioTutoria(tutoria._id);
-                const promedioCalificacion = promedioResponse.promedio || 0;
-                const badgeClass = obtenerClasePromedioBadge(parseFloat(promedioCalificacion));
-                
-                html += `
-                    <tr>
-                        <td>${tutoria.materia}</td>
-                        <td>${formatearFecha(tutoria.fecha)}</td>
-                        <td>${tutoria.horaInicio}</td>
-                        <td>${tutoria.horaFin}</td>
-                        <td>${tutoria.cuposDisponibles}/${tutoria.cuposOriginales}</td>
-                        <td><span class="badge ${badgeClass}">${promedioCalificacion > 0 ? promedioCalificacion.toFixed(1) + '/5' : 'Sin calif.'}</span></td>
-                        <td>
-                            <a href="/aula.html?id=${tutoria._id}" class="btn btn-sm btn-success">
-                                <i class="bi bi-door-open"></i> Ir al Aula
-                            </a>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-primary btn-ver-respuestas" data-tutoria-id="${tutoria._id}" data-materia="${tutoria.materia}">
-                                <i class="bi bi-eye"></i> Ver Respuestas
-                            </button>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-warning btn-editar-tutoria" data-tutoria-id="${tutoria._id}" data-materia="${tutoria.materia}" data-fecha="${tutoria.fecha}" data-hora-inicio="${tutoria.horaInicio}" data-hora-fin="${tutoria.horaFin}" data-cupos="${tutoria.cuposOriginales}">
-                                <i class="bi bi-pencil"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-danger btn-eliminar-tutoria" data-tutoria-id="${tutoria._id}" data-materia="${tutoria.materia}">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                `;
+            // Determinar estado de publicación
+            const estadoPublicacion = tutoria.publicada ? 'Publicada' : 'No Publicada';
+            const estadoClass = tutoria.publicada ? 'text-green-700' : 'text-gray-500';
             
-                // Agregar solicitudes como filas adicionales si existen
-                if (solicitudes.length > 0) {
-                    html += `<tr><td colspan="9" class="p-0"><div class="p-3 bg-light"><h6 class="mb-3">Solicitudes Recibidas ${filtroEstadoSolicitudes !== 'Todas' ? '(' + filtroEstadoSolicitudes + ')' : ''}</h6>${generarHTMLSolicitudesTutoria(solicitudes, tutoria)}</div></td></tr>`;
-                } else if (filtroEstadoSolicitudes === 'Todas') {
-                    html += `<tr><td colspan="9" class="text-center text-muted"><small>No tienes solicitudes por revisar</small></td></tr>`;
-                }
-            }
+            html += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-2 py-2 text-xs text-gray-700 truncate">${tutoria._id.substring(0, 7)}</td>
+                    <td class="px-2 py-2 text-xs text-gray-700 truncate">${tutoria.materiaNombre || tutoria.materia}</td>
+                    <td class="px-2 py-2 text-xs text-gray-700 whitespace-nowrap">${formatearFecha(tutoria.fecha)}</td>
+                    <td class="px-2 py-2 text-xs ${estadoClass} font-medium whitespace-nowrap">${estadoPublicacion}</td>
+                    <td class="px-2 py-2 text-xs text-gray-700 text-center">${tutoria.cuposOriginales}</td>
+                    <td class="px-2 py-2 text-xs text-gray-700 text-center">${cuposAceptados}</td>
+                    <td class="px-2 py-2 text-center">
+                        <a href="/aula.html?id=${tutoria._id}" 
+                           class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition whitespace-nowrap">
+                            Ir al Aula
+                        </a>
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition whitespace-nowrap w-full">
+                            Publicar
+                        </button>
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs font-medium transition btn-editar-tutoria whitespace-nowrap w-full" 
+                                data-tutoria-id="${tutoria._id}" 
+                                data-materia="${tutoria.materia._id || tutoria.materia}" 
+                                data-materia-nombre="${tutoria.materiaNombre || tutoria.materia}" 
+                                data-fecha="${tutoria.fecha}" 
+                                data-hora-inicio="${tutoria.horaInicio}" 
+                                data-hora-fin="${tutoria.horaFin}" 
+                                data-cupos="${tutoria.cuposOriginales}">
+                            Editar
+                        </button>
+                    </td>
+                    <td class="px-2 py-2 text-xs text-gray-700 text-center">${promedioCalificacion > 0 ? promedioCalificacion.toFixed(1) : '0'}</td>
+                    <td class="px-2 py-2 text-center">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition btn-ver-respuestas whitespace-nowrap w-full" 
+                                data-tutoria-id="${tutoria._id}" 
+                                data-materia="${tutoria.materiaNombre || tutoria.materia}">
+                            Ver Respuestas
+                        </button>
+                    </td>
+                </tr>
+            `;
         }
 
-        html += '</tbody></table>';
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
         
-        // Si no hay tutorías que cumplan el filtro, mostrar mensaje
-        if (!hayTutoriasConSolicitudes && filtroEstadoSolicitudes !== 'Todas') {
-            container.innerHTML = `<div class="alert alert-info text-center">No existen solicitudes en el estado: ${filtroEstadoSolicitudes}</div>`;
-        } else {
-            container.innerHTML = html;
-            
-            // Agregar event listeners para los botones
-            agregarEventListenersGestionSolicitudes();
-            agregarEventListenersVerRespuestas();
-            agregarEventListenersEditarEliminar();
-        }
+        container.innerHTML = html;
+        
+        // Cargar todas las solicitudes
+        await cargarTodasSolicitudes(tutorias);
+        
+        // Agregar event listeners
+        agregarEventListenersVerRespuestas();
+        agregarEventListenersEditarEliminar();
         
     } catch (error) {
         console.error('Error al cargar tutorías:', error);
-        container.innerHTML = '<div class="alert alert-danger">Error al cargar tutorías</div>';
+        container.innerHTML = '<div class="text-center text-red-600 py-4">Error al cargar tutorías</div>';
+    }
+}
+
+// Cargar todas las solicitudes de todas las tutorías
+async function cargarTodasSolicitudes(tutorias) {
+    const solicitudesContainer = document.getElementById('solicitudes-lista');
+    
+    try {
+        let todasLasSolicitudes = [];
+        
+        for (const tutoria of tutorias) {
+            const solicitudesResponse = await APIClient.getSolicitudesTutoria(tutoria._id);
+            const solicitudes = solicitudesResponse.solicitudes.map(s => ({
+                ...s,
+                tutoriaMateria: tutoria.materia,
+                tutoriaId: tutoria._id,
+                cuposDisponibles: tutoria.cuposDisponibles
+            }));
+            todasLasSolicitudes = todasLasSolicitudes.concat(solicitudes);
+        }
+        
+        // Aplicar filtro
+        let solicitudesFiltradas = todasLasSolicitudes;
+        if (filtroEstadoSolicitudes && filtroEstadoSolicitudes !== 'Todas') {
+            solicitudesFiltradas = todasLasSolicitudes.filter(s => s.estado === filtroEstadoSolicitudes);
+        }
+        
+        if (solicitudesFiltradas.length === 0) {
+            solicitudesContainer.innerHTML = '<div class="text-center text-gray-600 py-8">No hay solicitudes con el filtro seleccionado</div>';
+            return;
+        }
+        
+        // Generar tabla de solicitudes
+        let html = `
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 text-xs">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 border-b">ID Solicitud</th>
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 border-b">Materia</th>
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-700 border-b">Alumno</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b">Estado</th>
+                            <th class="px-2 py-2 text-center text-xs font-semibold text-gray-700 border-b">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        solicitudesFiltradas.forEach(solicitud => {
+            html += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-2 py-2 text-xs text-gray-700">${solicitud._id.substring(0, 6)}...</td>
+                    <td class="px-2 py-2 text-xs text-gray-700">${solicitud.tutoriaMateria}</td>
+                    <td class="px-2 py-2 text-xs text-gray-700">${solicitud.estudianteNombre}</td>
+                    <td class="px-2 py-2 text-center">
+                        <span class="text-xs text-gray-700">${solicitud.estado}</span>
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition mr-1 btn-aceptar" 
+                                data-solicitud-id="${solicitud._id}"
+                                ${solicitud.cuposDisponibles === 0 && solicitud.estado !== 'Aceptada' ? 'disabled' : ''}>
+                            Aceptar
+                        </button>
+                        <button class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition btn-rechazar" 
+                                data-solicitud-id="${solicitud._id}">
+                            Rechazar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        solicitudesContainer.innerHTML = html;
+        
+        // Agregar event listeners para gestión de solicitudes
+        agregarEventListenersGestionSolicitudes();
+        
+    } catch (error) {
+        console.error('Error al cargar solicitudes:', error);
+        solicitudesContainer.innerHTML = '<div class="text-center text-red-600 py-4">Error al cargar solicitudes</div>';
     }
 }
 
@@ -275,7 +401,7 @@ function agregarEventListenersGestionSolicitudes() {
                 }
             } catch (error) {
                 console.error('Error al aceptar solicitud:', error);
-                alert('Error al aceptar solicitud: ' + error.message);
+                mostrarNotificacion('Error', 'Error al aceptar solicitud: ' + error.message, 'error');
             }
         });
     });
@@ -297,7 +423,7 @@ function agregarEventListenersGestionSolicitudes() {
                 }
             } catch (error) {
                 console.error('Error al rechazar solicitud:', error);
-                alert('Error al rechazar solicitud: ' + error.message);
+                mostrarNotificacion('Error', 'Error al rechazar solicitud: ' + error.message, 'error');
             }
         });
     });
@@ -320,7 +446,7 @@ async function mostrarModalRespuestas(tutoriaId, materia) {
         const preguntas = preguntasResponse.preguntas;
         
         if (preguntas.length === 0) {
-            alert('No hay preguntas configuradas para esta materia');
+            mostrarNotificacion('Información', 'No hay preguntas configuradas para esta materia', 'info');
             return;
         }
         
@@ -386,7 +512,7 @@ async function mostrarModalRespuestas(tutoriaId, materia) {
         
     } catch (error) {
         console.error('Error al cargar respuestas:', error);
-        alert('Error al cargar las preguntas de la encuesta');
+        mostrarNotificacion('Error', 'Error al cargar las preguntas de la encuesta', 'error');
     }
 }
 
@@ -492,22 +618,26 @@ function mostrarModalEditarTutoria(tutoriaId, materia, fecha, horaInicio, horaFi
     document.getElementById('editar-hora-fin').value = horaFin;
     document.getElementById('editar-cupos').value = cupos;
     
-    document.getElementById('modal-editar-tutoria').style.display = 'block';
+    const modal = document.getElementById('modal-editar-tutoria');
+    modal.classList.remove('hidden');
 }
 
 function cerrarModalEditarTutoria() {
-    document.getElementById('modal-editar-tutoria').style.display = 'none';
+    const modal = document.getElementById('modal-editar-tutoria');
+    modal.classList.add('hidden');
 }
 
 function mostrarModalConfirmarEliminar(tutoriaId, materia) {
     tutoriaIdAEliminar = tutoriaId;
     document.getElementById('eliminar-materia-nombre').textContent = materia;
-    document.getElementById('modal-confirmar-eliminar').style.display = 'block';
+    const modal = document.getElementById('modal-confirmar-eliminar');
+    modal.classList.remove('hidden');
 }
 
 function cerrarModalConfirmarEliminar() {
     tutoriaIdAEliminar = null;
-    document.getElementById('modal-confirmar-eliminar').style.display = 'none';
+    const modal = document.getElementById('modal-confirmar-eliminar');
+    modal.classList.add('hidden');
 }
 
 // Event listener para el formulario de editar
@@ -525,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Validar que hora inicio < hora fin
             if (horaInicio >= horaFin) {
-                alert('La hora de inicio debe ser menor que la hora de fin');
+                mostrarNotificacion('Advertencia', 'La hora de inicio debe ser menor que la hora de fin', 'warning');
                 return;
             }
             
@@ -537,18 +667,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     cupos
                 });
                 
-                cerrarModalEditarTutoria();
-                const sesion = await obtenerSesion();
-                await cargarTutoriasCreadas(sesion);
-                alert('Tutoría actualizada exitosamente');
-            } catch (error) {
-                console.error('Error al actualizar tutoría:', error);
-                alert('Error al actualizar tutoría: ' + error.message);
-            }
-        });
-    }
-    
-    const btnConfirmarEliminar = document.getElementById('btn-confirmar-eliminar');
+            
+            cerrarModalEditarTutoria();
+            const sesion = await obtenerSesion();
+            await cargarTutoriasCreadas(sesion);
+            mostrarNotificacion('Éxito', 'Tutoría actualizada exitosamente', 'success');
+        } catch (error) {
+            console.error('Error al actualizar tutoría:', error);
+            mostrarNotificacion('Error', 'Error al actualizar tutoría: ' + error.message, 'error');
+        }
+    });
+}    const btnConfirmarEliminar = document.getElementById('btn-confirmar-eliminar');
     if (btnConfirmarEliminar) {
         btnConfirmarEliminar.addEventListener('click', async function() {
             if (!tutoriaIdAEliminar) return;
@@ -559,11 +688,122 @@ document.addEventListener('DOMContentLoaded', function() {
                 cerrarModalConfirmarEliminar();
                 const sesion = await obtenerSesion();
                 await cargarTutoriasCreadas(sesion);
-                alert('Tutoría eliminada exitosamente');
+                mostrarNotificacion('Éxito', 'Tutoría eliminada exitosamente', 'success');
             } catch (error) {
                 console.error('Error al eliminar tutoría:', error);
-                alert('Error al eliminar tutoría: ' + error.message);
+                mostrarNotificacion('Error', 'Error al eliminar tutoría: ' + error.message, 'error');
             }
         });
     }
 });
+
+// Funciones para navegación entre vistas
+function mostrarVistaHome() {
+    document.getElementById('vista-home').classList.remove('hidden');
+    document.getElementById('vista-registrar').classList.add('hidden');
+    document.getElementById('vista-tutorias').classList.add('hidden');
+}
+
+function mostrarVistaRegistro() {
+    document.getElementById('vista-home').classList.add('hidden');
+    document.getElementById('vista-registrar').classList.remove('hidden');
+    document.getElementById('vista-tutorias').classList.add('hidden');
+    generarOpcionesHora();
+}
+
+async function mostrarVistaTutorias() {
+    document.getElementById('vista-home').classList.add('hidden');
+    document.getElementById('vista-registrar').classList.add('hidden');
+    document.getElementById('vista-tutorias').classList.remove('hidden');
+    const sesion = await obtenerSesion();
+    await cargarTutoriasCreadas(sesion);
+}
+
+// Generar opciones de hora para los selectores
+function generarOpcionesHora() {
+    const horaInicio = document.getElementById('hora-inicio');
+    const horaFin = document.getElementById('hora-fin');
+    
+    if (horaInicio.options.length <= 1) {
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 30) {
+                const hora = String(h).padStart(2, '0');
+                const minuto = String(m).padStart(2, '0');
+                const tiempo = `${hora}:${minuto}`;
+                
+                horaInicio.innerHTML += `<option value="${tiempo}">${tiempo}</option>`;
+                horaFin.innerHTML += `<option value="${tiempo}">${tiempo}</option>`;
+            }
+        }
+    }
+}
+
+// Event listener para cerrar modales con la tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+        // Cerrar modal de editar tutoría si está abierto
+        const modalEditar = document.getElementById('modal-editar-tutoria');
+        if (modalEditar && !modalEditar.classList.contains('hidden')) {
+            cerrarModalEditarTutoria();
+        }
+        
+        // Cerrar modal de confirmar eliminar si está abierto
+        const modalEliminar = document.getElementById('modal-confirmar-eliminar');
+        if (modalEliminar && !modalEliminar.classList.contains('hidden')) {
+            cerrarModalConfirmarEliminar();
+        }
+        
+        // Cerrar modal de notificación si está abierto
+        const modalNotificacion = document.getElementById('modal-notificacion');
+        if (modalNotificacion && !modalNotificacion.classList.contains('hidden')) {
+            cerrarModalNotificacion();
+        }
+    }
+});
+
+// Funciones para el modal de notificación
+function mostrarNotificacion(titulo, mensaje, tipo = 'info') {
+    const modal = document.getElementById('modal-notificacion');
+    const tituloElement = document.getElementById('titulo-notificacion');
+    const mensajeElement = document.getElementById('mensaje-notificacion');
+    const iconoElement = document.getElementById('icono-notificacion');
+    
+    tituloElement.textContent = titulo;
+    mensajeElement.textContent = mensaje;
+    
+    // Configurar icono según el tipo
+    let iconoHTML = '';
+    if (tipo === 'success') {
+        iconoHTML = `
+            <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        `;
+    } else if (tipo === 'error') {
+        iconoHTML = `
+            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        `;
+    } else if (tipo === 'warning') {
+        iconoHTML = `
+            <svg class="w-12 h-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+        `;
+    } else {
+        iconoHTML = `
+            <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        `;
+    }
+    
+    iconoElement.innerHTML = iconoHTML;
+    modal.classList.remove('hidden');
+}
+
+function cerrarModalNotificacion() {
+    const modal = document.getElementById('modal-notificacion');
+    modal.classList.add('hidden');
+}

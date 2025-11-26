@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputArchivo = document.getElementById('archivo');
     const inputMaterias = document.getElementById('materias');
     const nombreArchivoSpan = document.getElementById('nombre-archivo');
-    const btnCancelar = document.getElementById('btn-cancelar');
+
     const mensajeDiv = document.getElementById('mensaje-registro');
 
     let archivoSeleccionado = null;
@@ -58,12 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Botón Cancelar
-    btnCancelar.addEventListener('click', function() {
-        if (confirm('¿Estás seguro de que deseas cancelar el registro?')) {
-            window.location.href = 'login.html';
-        }
-    });
+
 
     // Envío del formulario
     form.addEventListener('submit', async function(e) {

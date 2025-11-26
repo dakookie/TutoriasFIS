@@ -94,6 +94,15 @@ class APIClient {
         });
     }
 
+    // Materias endpoints
+    static async obtenerMaterias() {
+        return this.request('/api/materias');
+    }
+
+    static async obtenerMateriasPorSemestre(semestre) {
+        return this.request(`/api/materias/semestre/${semestre}`);
+    }
+
     // Tutorías endpoints
     static async crearTutoria(tutoriaData) {
         return this.request('/api/tutorias', {

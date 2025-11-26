@@ -4,202 +4,261 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tutor - Plataforma de Tutorías FIS</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/app.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
-<body>
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Cargando...</span>
-        </div>
-        <h3>Verificando sesión...</h3>
-    </div>
-
-    <!-- Main Content -->
-    <div id="main-content">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" href="#">Tutorías FIS - Tutor</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="tutor.html">Mis Tutorías</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="chat.html">
-                                <i class="fas fa-comments"></i> Chat
-                                <span id="badge-mensajes" class="badge bg-danger rounded-pill ms-1" style="display: none;">0</span>
-                            </a>
-                        </li>
-                    </ul>
-                    <span class="navbar-text me-3" id="usuario-nombre">
-                        <!-- Se llenará dinámicamente -->
+<body class="bg-gray-50">
+    <!-- Navbar -->
+    <nav class="bg-gray-100 shadow-sm border-b border-gray-200">
+        <div class="px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-8">
+                    <a href="#" onclick="mostrarVistaHome(); return false;" class="text-xl font-semibold text-gray-800">Tutorías FIS</a>
+                    <div class="hidden md:flex space-x-6">
+                        <a href="#" onclick="mostrarVistaHome(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Home</a>
+                        <a href="#" onclick="mostrarVistaRegistro(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Registrar Tutoría</a>
+                        <a href="#" onclick="mostrarVistaTutorias(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Tutorías Creadas</a>
+                        <a href="chat.html" class="text-gray-700 hover:text-gray-900 font-medium flex items-center">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                            Chat
+                            <span id="badge-mensajes" class="hidden ml-2 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white">0</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-700 text-sm font-medium" id="usuario-nombre">
+                        Hola Tutor, Bienvenid@
                     </span>
-                    <button id="btn-logout" class="btn btn-danger btn-sm">Cerrar Sesión</button>
+                    <button id="btn-logout"
+                        class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md text-sm font-medium transition">
+                        Sign Out
+                    </button>
                 </div>
             </div>
-        </nav>
+        </div>
+    </nav>
 
-        <!-- Main Content -->
-        <div class="container my-5">
-            <h2 class="text-center mb-4">Panel de Tutor</h2>
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-12" style="max-width: 95%;">
+        <!-- Vista Home: Solo las tarjetas -->
+        <div id="vista-home">
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-3">Bienvenido, Tutor</h1>
+            <p class="text-center text-gray-600 mb-12">Desde aquí puedes registrar nuevas tutorías o responder solicitudes.</p>
 
-            <!-- Registrar nueva Tutoría -->
-            <div class="option-card mb-4">
-                <div class="card-header-custom">
-                    <h3 class="mb-0"><i class="bi bi-journal-plus me-2"></i>Registrar nueva Tutoría</h3>
+            <!-- Cards Container -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- Card: Registrar nueva Tutoría -->
+                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col">
+                    <div class="flex flex-col items-center text-center flex-grow">
+                        <div class="bg-blue-100 rounded-full p-6 mb-6">
+                            <svg class="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-semibold text-blue-600 mb-3">Registrar nueva Tutoría</h2>
+                        <p class="text-gray-600 mb-6">Crea nuevas tutorías y publica tus servicios para ayudar a los estudiantes.</p>
+                    </div>
+                    <button onclick="mostrarVistaRegistro()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition w-full mt-auto">
+                        Crear Tutoría
+                    </button>
                 </div>
-                <div class="card-body">
+
+                <!-- Card: Ver Tutorías Creadas -->
+                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col">
+                    <div class="flex flex-col items-center text-center flex-grow">
+                        <div class="bg-blue-100 rounded-full p-6 mb-6">
+                            <svg class="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-semibold text-blue-600 mb-3">Ver Tutorías Creadas</h2>
+                        <p class="text-gray-600 mb-6">Administra las tutorías que ya has registrado.</p>
+                    </div>
+                    <button onclick="mostrarVistaTutorias()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition w-full mt-auto">
+                        Ver Tutorías
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista Registrar Tutoría -->
+        <div id="vista-registrar" class="hidden">
+            <div class="max-w-2xl mx-auto">
+                <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Registrar una Nueva Tutoría</h1>
+                
+                <div class="bg-white rounded-lg shadow-md p-8">
                     <form id="form-registrar-tutoria">
-                        <div class="mb-3">
-                            <label for="materia" class="form-label">Materia *</label>
-                            <select id="materia" name="materia" class="form-select" required>
+                        <div class="mb-5">
+                            <label for="materia" class="block text-sm font-medium text-gray-700 mb-2">Materia</label>
+                            <select id="materia" name="materia" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" required>
                                 <option value="">Selecciona una materia</option>
-                                <!-- Se llenará dinámicamente según las materias del tutor -->
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="fecha" class="form-label">Fecha *</label>
-                            <input type="date" id="fecha" name="fecha" class="form-control" required>
+                        <div class="mb-5">
+                            <label for="fecha" class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+                            <input type="date" id="fecha" name="fecha" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="hora-inicio" class="form-label">Hora de Inicio *</label>
-                                <input type="time" id="hora-inicio" name="hora-inicio" class="form-control" required>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="hora-fin" class="form-label">Hora de Fin *</label>
-                                <input type="time" id="hora-fin" name="hora-fin" class="form-control" required>
-                            </div>
+                        <div class="mb-5">
+                            <label for="hora-inicio" class="block text-sm font-medium text-gray-700 mb-2">Hora de inicio</label>
+                            <select id="hora-inicio" name="hora-inicio" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" required>
+                                <option value="">Seleccionar hora</option>
+                            </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="cupos" class="form-label">Cupos Disponibles *</label>
-                            <input type="number" id="cupos" name="cupos" class="form-control" min="1" max="20" required>
+                        <div class="mb-5">
+                            <label for="hora-fin" class="block text-sm font-medium text-gray-700 mb-2">Hora de fin</label>
+                            <select id="hora-fin" name="hora-fin" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" required>
+                                <option value="">Seleccionar hora</option>
+                            </select>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Registrar</button>
-                        <div id="mensaje-registro" class="alert mt-3" style="display: none;"></div>
+                        <div class="mb-6">
+                            <label for="cupos" class="block text-sm font-medium text-gray-700 mb-2">Cupos</label>
+                            <input type="number" id="cupos" name="cupos" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" min="1" max="20" required>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition text-lg">
+                            Registrar
+                        </button>
+                        <div id="mensaje-registro" class="hidden mt-4 p-3 rounded-lg"></div>
                     </form>
                 </div>
             </div>
-
-            <!-- Tutorías Creadas -->
-            <div class="option-card">
-                <div class="card-header-custom">
-                    <h3 class="mb-0"><i class="bi bi-list-check me-2"></i>Tutorías Creadas</h3>
-                </div>
-                <div class="card-body">
-                    <!-- HU-005: Filtro por estado de solicitudes -->
-                    <div class="d-flex align-items-center mb-4">
-                        <label for="filtro-estado-solicitudes" class="form-label me-2 mb-0">Filtrar solicitudes por estado:</label>
-                        <select id="filtro-estado-solicitudes" class="form-select w-auto">
-                            <option value="Todas">Todas</option>
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="Aceptada">Aceptada</option>
-                            <option value="Rechazada">Rechazada</option>
-                        </select>
-                    </div>
-                    
-                    <div id="tutoria-creadas-lista" class="table-responsive">
-                        <!-- Se llenará dinámicamente -->
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Modal para Encuesta de Calificación (HU-009) -->
-        <div id="modal-encuesta" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="cerrarModalEncuesta()">&times;</span>
-                <h2 id="modal-encuesta-titulo">Calificar Tutoría</h2>
-                <div class="modal-body" id="modal-encuesta-body">
+        <!-- Vista Tutorías Creadas -->
+        <div id="vista-tutorias" class="hidden">
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Tutorías Creadas</h1>
+            
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div id="tutoria-creadas-lista">
                     <!-- Se llenará dinámicamente -->
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalEncuesta()">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btn-enviar-encuesta">Enviar Calificación</button>
+            </div>
+
+            <!-- Solicitudes Recibidas -->
+            <div id="solicitudes-container" class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Solicitudes Recibidas</h2>
+                
+                <!-- Filtro por estado de solicitudes -->
+                <div class="mb-6 flex items-center">
+                    <label for="filtro-estado-solicitudes" class="text-gray-700 font-medium mr-3">Filtrar por estado:</label>
+                    <select id="filtro-estado-solicitudes" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="Todas">Todas</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Aceptada">Aceptada</option>
+                        <option value="Rechazada">Rechazada</option>
+                    </select>
                 </div>
-                <div id="error-encuesta" class="alert alert-danger mt-3" role="alert" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- Modal para Editar Tutoría -->
-        <div id="modal-editar-tutoria" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="cerrarModalEditarTutoria()">&times;</span>
-                <h2>Editar Tutoría</h2>
-                <form id="form-editar-tutoria">
-                    <input type="hidden" id="editar-tutoria-id">
-                    <div class="mb-3">
-                        <label for="editar-materia" class="form-label">Materia</label>
-                        <input type="text" class="form-control" id="editar-materia" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editar-fecha" class="form-label">Fecha <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="editar-fecha" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="editar-hora-inicio" class="form-label">Hora Inicio <span class="text-danger">*</span></label>
-                                <input type="time" class="form-control" id="editar-hora-inicio" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="editar-hora-fin" class="form-label">Hora Fin <span class="text-danger">*</span></label>
-                                <input type="time" class="form-control" id="editar-hora-fin" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editar-cupos" class="form-label">Cupos <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="editar-cupos" min="1" required>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" onclick="cerrarModalEditarTutoria()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal de Confirmación para Eliminar -->
-        <div id="modal-confirmar-eliminar" class="modal">
-            <div class="modal-content">
-                <h2>Confirmar Eliminación</h2>
-                <p class="text-danger"><strong>¿Estás seguro de que deseas eliminar esta tutoría?</strong></p>
-                <p>Esta acción eliminará:</p>
-                <ul>
-                    <li>La tutoría de <strong id="eliminar-materia-nombre"></strong></li>
-                    <li>Todas las solicitudes asociadas</li>
-                    <li>Todo el contenido del aula virtual (publicaciones y bibliografías)</li>
-                    <li>Todas las calificaciones de encuestas</li>
-                </ul>
-                <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalConfirmarEliminar()">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar">Sí, Eliminar</button>
+                
+                <div id="solicitudes-lista">
+                    <!-- Se llenará dinámicamente -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Modal para Editar Tutoría -->
+    <div id="modal-editar-tutoria" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Editar Tutoría</h2>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="cerrarModalEditarTutoria()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            
+            <form id="form-editar-tutoria">
+                <input type="hidden" id="editar-tutoria-id">
+                <div class="mb-4">
+                    <label for="editar-materia" class="block text-sm font-medium text-gray-700 mb-2">Materia</label>
+                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100" id="editar-materia" disabled>
+                </div>
+                <div class="mb-4">
+                    <label for="editar-fecha" class="block text-sm font-medium text-gray-700 mb-2">Fecha <span class="text-red-500">*</span></label>
+                    <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="editar-fecha" required>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="editar-hora-inicio" class="block text-sm font-medium text-gray-700 mb-2">Hora Inicio <span class="text-red-500">*</span></label>
+                        <input type="time" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="editar-hora-inicio" required>
+                    </div>
+                    <div>
+                        <label for="editar-hora-fin" class="block text-sm font-medium text-gray-700 mb-2">Hora Fin <span class="text-red-500">*</span></label>
+                        <input type="time" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="editar-hora-fin" required>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label for="editar-cupos" class="block text-sm font-medium text-gray-700 mb-2">Cupos <span class="text-red-500">*</span></label>
+                    <input type="number" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="editar-cupos" min="1" required>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded font-medium transition" onclick="cerrarModalEditarTutoria()">Cancelar</button>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded font-medium transition">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación para Eliminar -->
+    <div id="modal-confirmar-eliminar" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Confirmar Eliminación</h2>
+            <p class="text-red-600 font-semibold mb-3">¿Estás seguro de que deseas eliminar esta tutoría?</p>
+            <p class="text-gray-700 mb-2">Esta acción eliminará:</p>
+            <ul class="list-disc list-inside text-gray-700 mb-3 space-y-1">
+                <li>La tutoría de <strong id="eliminar-materia-nombre"></strong></li>
+                <li>Todas las solicitudes asociadas</li>
+                <li>Todo el contenido del aula virtual (publicaciones y bibliografías)</li>
+                <li>Todas las calificaciones de encuestas</li>
+            </ul>
+            <p class="text-red-600 font-semibold mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-3">
+                <button type="button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded font-medium transition" onclick="cerrarModalConfirmarEliminar()">Cancelar</button>
+                <button type="button" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-medium transition" id="btn-confirmar-eliminar">Sí, Eliminar</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Modal de Notificación -->
+    <div id="modal-notificacion" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                <div class="flex items-start mb-4">
+                    <div id="icono-notificacion" class="flex-shrink-0 mr-3">
+                        <!-- Icono se llenará dinámicamente -->
+                    </div>
+                    <div class="flex-grow">
+                        <h3 id="titulo-notificacion" class="text-lg font-semibold text-gray-800 mb-2"></h3>
+                        <p id="mensaje-notificacion" class="text-gray-600"></p>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition" 
+                            onclick="cerrarModalNotificacion()">
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/api-client.js"></script>
     <script src="js/socket-client.js"></script>

@@ -1,211 +1,375 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Administrador - Tutorías FIS</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/app.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .tab-buttons {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            margin-bottom: 20px;
+        body {
+            font-family: 'Inter', sans-serif;
         }
-        .tab-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            margin: 5px;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
+
+        .card-hover {
+            transition: all 0.3s ease;
         }
-        .tab-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
-        }
-        .tab-button.active {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
-<body>
+
+<body class="bg-gray-50">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#">Tutorías FIS</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="admin.html">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active">Solicitud de Tutores</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link">Solicitud de Estudiantes</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link">Formularios de calificación</a>
-                    </li>
-                </ul>
-                <span class="navbar-text me-3" id="welcome-message">
-                    <!-- Se llenará dinámicamente -->
-                </span>
-                <button id="btn-logout" class="btn btn-danger btn-sm">Sign Out</button>
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-8">
+                    <a href="admin.html" class="text-xl font-bold text-gray-800">Tutorías FIS</a>
+                    <div class="hidden md:flex space-x-6">
+                        <a href="admin.html" class="text-gray-600 hover:text-gray-800">Home</a>
+                        <a href="#" class="text-gray-600 hover:text-gray-800" id="link-tutores">Solicitud de Tutores</a>
+                        <a href="#" class="text-gray-600 hover:text-gray-800" id="link-estudiantes">Solicitud de
+                            Estudiantes</a>
+                        <a href="#" class="text-gray-600 hover:text-gray-800" id="link-formularios">Formularios de
+                            calificación</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-600 text-sm" id="welcome-message">
+                        Hola Administrador José Pluri, Bienvenid@
+                    </span>
+                    <button id="btn-logout"
+                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium transition">
+                        Sign Out
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <!-- Main Content -->
-    <div class="container my-5">
-        <h2 class="text-center mb-4">Panel - Administrador</h2>
-        
-        <!-- Tabs -->
-        <div class="tab-buttons text-center">
-            <button class="tab-button active" data-tab="tutores">Solicitudes de Tutores</button>
-            <button class="tab-button" data-tab="estudiantes">Solicitudes de Estudiantes</button>
-            <button class="tab-button" data-tab="encuestas">Formularios de Calificación</button>
-        </div>
+    <div class="container mx-auto px-4 py-12">
+        <!-- Home View -->
+        <div id="home-view">
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-12">Solicitudes de usuarios</h1>
 
-        <!-- SECCIÓN SOLICITUDES DE TUTORES (HU-012) -->
-        <div id="tutores-section" class="tab-content active">
-            <div class="option-card">
-                <div class="card-header-custom">
-                    <h3 class="mb-0">Solicitudes de Tutores pendientes a revisión</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Solicitudes de Tutores Card -->
+                <div class="bg-white rounded-xl shadow-md p-8 card-hover cursor-pointer" id="card-tutores">
+                    <div class="text-center">
+                        <div class="w-32 h-32 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-20 h-20 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-semibold text-blue-600 mb-3">Solicitudes de Tutores</h2>
+                        <p class="text-gray-600 text-sm">Aquí puedes gestionar las solicitudes pendientes de tutores</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div id="lista-solicitudes-tutores" class="table-responsive">
-                        <!-- Se llenará dinámicamente -->
+
+                <!-- Solicitudes de Alumnos Card -->
+                <div class="bg-white rounded-xl shadow-md p-8 card-hover cursor-pointer" id="card-alumnos">
+                    <div class="text-center">
+                        <div class="w-32 h-32 mx-auto mb-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <svg class="w-20 h-20 text-yellow-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-semibold text-blue-600 mb-3">Solicitudes de Alumnos</h2>
+                        <p class="text-gray-600 text-sm">Aquí puedes gestionar las solicitudes pendientes de estudiantes
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Formularios de Calificación Card -->
+                <div class="bg-white rounded-xl shadow-md p-8 card-hover cursor-pointer" id="card-formularios">
+                    <div class="text-center">
+                        <div class="w-32 h-32 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-20 h-20 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-semibold text-blue-600 mb-3">Formularios de Calificación</h2>
+                        <p class="text-gray-600 text-sm">Aquí puedes gestionar las preguntas de los formularios de
+                            calificación</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- SECCIÓN SOLICITUDES DE ESTUDIANTES (HU-002) -->
-        <div id="estudiantes-section" class="tab-content">
-            <div class="option-card">
-                <div class="card-header-custom">
-                    <h3 class="mb-0">Solicitudes de Estudiantes pendientes a revisión</h3>
-                </div>
-                <div class="card-body">
-                    <div id="lista-solicitudes-estudiantes" class="table-responsive">
-                        <!-- Se llenará dinámicamente -->
-                    </div>
+        <!-- Tutores View -->
+        <div id="tutores-view" class="hidden">
+            <div class="mb-6">
+                <button id="btn-back-tutores" class="text-blue-600 hover:text-blue-800 flex items-center mb-6">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Volver
+                </button>
+
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Solicitudes de Tutores pendientes a
+                    revisión</h2>
+
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-blue-100">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">ID Tutor</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">ID Usuario</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nombre</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Apellido</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nombre de Usuario
+                                </th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Estado</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Certificación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-solicitudes-tutores" class="divide-y divide-gray-200">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- SECCIÓN FORMULARIOS DE CALIFICACIÓN (HU-007) -->
-        <div id="encuestas-section" class="tab-content">
-            <div class="option-card mb-4">
-                <div class="card-header-custom">
-                    <h3 class="mb-0">Preguntas de formulario de calificación</h3>
+        <!-- Estudiantes View -->
+        <div id="estudiantes-view" class="hidden">
+            <div class="mb-6">
+                <button id="btn-back-estudiantes" class="text-blue-600 hover:text-blue-800 flex items-center mb-6">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Volver
+                </button>
+
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Solicitudes de Estudiantes pendientes a
+                    revisión</h2>
+
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-blue-100">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">ID Estudiante</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">ID Usuario</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nombre</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Apellido</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nombre de Usuario
+                                </th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Estado</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Certificado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-solicitudes-estudiantes" class="divide-y divide-gray-200">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="materia-encuesta" class="form-label">Selecciona una Materia:</label>
-                        <select id="materia-encuesta" class="form-select">
-                            <option value="">Seleccionar materia</option>
-                        </select>
-                    </div>
+            </div>
+        </div>
 
-                    <div class="mb-3">
-                        <label for="pregunta-encuesta" class="form-label">Pregunta para escala de Likert:</label>
-                        <textarea id="pregunta-encuesta" rows="3" class="form-control" placeholder="Escribe la pregunta de la encuesta"></textarea>
-                    </div>
+        <!-- Formularios View -->
+        <div id="formularios-view" class="hidden">
+            <div class="mb-6">
+                <button id="btn-back-formularios" class="text-blue-600 hover:text-blue-800 flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Volver
+                </button>
+            </div>
 
-                    <button id="btn-guardar-pregunta" class="btn btn-primary">Guardar Pregunta</button>
-                    <div id="error-pregunta" class="alert alert-danger mt-3" role="alert" style="display: none;"></div>
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">Preguntas de formulario de calificación</h3>
+                <div class="mb-4">
+                    <label for="materia-encuesta" class="block text-sm font-medium text-gray-700 mb-2">Selecciona una
+                        Materia:</label>
+                    <select id="materia-encuesta"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Seleccionar materia</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="pregunta-encuesta" class="block text-sm font-medium text-gray-700 mb-2">Pregunta para
+                        escala de Likert:</label>
+                    <textarea id="pregunta-encuesta" rows="3"
+                        class="w-full px-4 py-2 border border-gray-300rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Escribe la pregunta de la encuesta"></textarea>
+                </div>
+                <button id="btn-guardar-pregunta"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded font-medium transition">
+                    Guardar Pregunta
+                </button>
+                <div id="error-pregunta" class="hidden mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                 </div>
             </div>
 
-            <div class="option-card">
-                <div class="card-header-custom">
-                    <h3 class="mb-0">Preguntas de la Materia Seleccionada</h3>
-                </div>
-                <div class="card-body">
-                    <div id="lista-preguntas">
-                        <!-- Se llenará dinámicamente -->
-                    </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Preguntas de la Materia Seleccionada</h3>
+                <div id="lista-preguntas">
+                    <!-- Se llenará dinámicamente -->
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Modal para ver PDF y gestionar solicitud -->
-    <div id="modal-solicitud" class="modal">
-        <div class="modal-content modal-large">
-            <span class="close">&times;</span>
-            <h2 id="modal-titulo">Revisar Solicitud</h2>
-            
-            <div class="modal-body">
-                <div class="solicitud-detalle" id="detalle-solicitud">
+    <div id="modal-solicitud" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800" id="modal-titulo">Revisar Solicitud</h2>
+                    <button class="text-gray-400 hover:text-gray-600" id="btn-cerrar-modal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="detalle-solicitud" class="mb-6">
                     <!-- Se llenará dinámicamente -->
                 </div>
 
-                <div class="pdf-viewer">
-                    <h3>Documento Adjunto</h3>
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-3">Documento Adjunto</h3>
                     <div id="pdf-container">
-                        <embed id="pdf-embed" type="application/pdf" width="100%" height="500px">
+                        <embed id="pdf-embed" type="application/pdf" class="w-full h-96 border rounded">
                     </div>
                 </div>
 
                 <!-- Sección de materias (solo para tutores) -->
-                <div id="seccion-materias" style="display: none;">
-                    <h3>Asignar Materias al Tutor</h3>
-                    <div class="materias-grid" id="grid-materias">
+                <div id="seccion-materias" class="hidden mb-6">
+                    <h3 class="text-lg font-semibold mb-3">Asignar Materias al Tutor</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="grid-materias">
                         <!-- Se llenará dinámicamente -->
                     </div>
-                    <span class="error-message" id="error-materias"></span>
+                    <span class="text-red-600 text-sm" id="error-materias"></span>
                 </div>
 
-                <div class="modal-actions">
-                    <button class="btn btn-success" id="btn-aprobar">Aprobar</button>
-                    <button class="btn btn-danger" id="btn-rechazar">Rechazar</button>
-                    <button class="btn btn-secondary" id="btn-cerrar-modal">Cerrar</button>
+                <div class="flex justify-end space-x-3">
+                    <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded font-medium transition"
+                        id="btn-aprobar">Aprobar</button>
+                    <button class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded font-medium transition"
+                        id="btn-rechazar">Rechazar</button>
+                    <button class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-medium transition"
+                        id="btn-cerrar">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal para ver PDF -->
-    <div id="modal-pdf" class="modal" style="display: none;">
-        <div class="modal-content" style="width: 90%; max-width: 1000px;">
-            <span class="close">&times;</span>
-            <h2>Documento PDF</h2>
-            <div class="modal-body">
-                <iframe id="pdf-viewer" style="width: 100%; height: 600px; border: none;"></iframe>
+    <!-- Modal de Confirmación para Rechazar -->
+    <div id="modal-confirmar-rechazo" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60]">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-md p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">¿Estás seguro de rechazar esta solicitud?</h3>
+            <p class="text-gray-600 text-sm mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-3">
+                <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded font-medium transition"
+                    id="btn-cancelar-rechazo">Cancelar</button>
+                <button class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-medium transition"
+                    id="btn-confirmar-rechazo">Aceptar</button>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Modal de Confirmación de Éxito -->
+    <div id="modal-exito" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60]">
+        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-md p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4" id="mensaje-exito">Solicitud aprobada exitosamente</h3>
+            <div class="flex justify-center">
+                <button class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-2 rounded font-medium transition"
+                    id="btn-cerrar-exito">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/api-client.js"></script>
     <script src="js/socket-client.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
+    <script>
+        // Navigation from cards
+        document.getElementById('card-tutores').addEventListener('click', () => {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tutores-view').classList.remove('hidden');
+        });
+
+        document.getElementById('card-alumnos').addEventListener('click', () => {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('estudiantes-view').classList.remove('hidden');
+        });
+
+        document.getElementById('card-formularios').addEventListener('click', () => {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('formularios-view').classList.remove('hidden');
+        });
+
+        // Navigation from navbar
+        document.getElementById('link-tutores').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('estudiantes-view').classList.add('hidden');
+            document.getElementById('formularios-view').classList.add('hidden');
+            document.getElementById('tutores-view').classList.remove('hidden');
+        });
+
+        document.getElementById('link-estudiantes').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tutores-view').classList.add('hidden');
+            document.getElementById('formularios-view').classList.add('hidden');
+            document.getElementById('estudiantes-view').classList.remove('hidden');
+        });
+
+        document.getElementById('link-formularios').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tutores-view').classList.add('hidden');
+            document.getElementById('estudiantes-view').classList.add('hidden');
+            document.getElementById('formularios-view').classList.remove('hidden');
+        });
+
+        // Back buttons
+        document.getElementById('btn-back-tutores').addEventListener('click', () => {
+            document.getElementById('tutores-view').classList.add('hidden');
+            document.getElementById('home-view').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-back-estudiantes').addEventListener('click', () => {
+            document.getElementById('estudiantes-view').classList.add('hidden');
+            document.getElementById('home-view').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-back-formularios').addEventListener('click', () => {
+            document.getElementById('formularios-view').classList.add('hidden');
+            document.getElementById('home-view').classList.remove('hidden');
+        });
+
+        // Modal close handlers
+        document.getElementById('btn-cerrar-modal').addEventListener('click', () => {
+            document.getElementById('modal-solicitud').classList.add('hidden');
+        });
+
+        document.getElementById('btn-cerrar').addEventListener('click', () => {
+            document.getElementById('modal-solicitud').classList.add('hidden');
+        });
+    </script>
 </body>
+
 </html>

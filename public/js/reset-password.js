@@ -35,9 +35,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
 
-        // Validar longitud mínima
-        if (newPassword.length < 6) {
-            mostrarMensaje('La contraseña debe tener al menos 6 caracteres', 'error');
+        // Validar contraseña (mismo criterio que registro)
+        if (!validarPassword(newPassword)) {
+            mostrarMensaje('La contraseña debe tener al menos 8 caracteres, incluyendo una letra, un número y un carácter especial', 'error');
             return;
         }
 
@@ -108,5 +108,16 @@ document.addEventListener('DOMContentLoaded', async function() {
                 mensajeDiv.classList.remove('show');
             }, 5000);
         }
+    }
+
+    // Validar contraseña (mínimo 8 caracteres, con letra, número y carácter especial)
+    function validarPassword(password) {
+        if (password.length < 8) return false;
+        
+        const tieneLetra = /[a-zA-Z]/.test(password);
+        const tieneNumero = /[0-9]/.test(password);
+        const tieneEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        
+        return tieneLetra && tieneNumero && tieneEspecial;
     }
 });

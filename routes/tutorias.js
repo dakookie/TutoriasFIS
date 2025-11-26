@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Tutoria = require('../models/Tutoria');
+const Materia = require('../models/Materia');
 const Solicitud = require('../models/Solicitud');
 const { requireAuth, requireRole } = require('../middleware/auth');
 
@@ -17,8 +18,18 @@ router.post('/', requireRole('Tutor'), async (req, res) => {
             });
         }
 
+        // Obtener nombre de la materia
+        const materiaDoc = await Materia.findById(materia);
+        if (!materiaDoc) {
+            return res.status(404).json({
+                success: false,
+                message: 'Materia no encontrada'
+            });
+        }
+
         const tutoria = new Tutoria({
             materia,
+            materiaNombre: materiaDoc.nombre,
             fecha,
             horaInicio,
             horaFin,
@@ -175,6 +186,7 @@ router.get('/', requireAuth, async (req, res) => {
 
         const tutorias = await Tutoria.find(filtro)
             .populate('tutor', 'nombre apellido email')
+            .populate('materia', 'nombre codigo semestre')
             .sort({ fecha: 1, horaInicio: 1 });
 
         res.json({
@@ -195,6 +207,7 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/tutor/:tutorId', requireAuth, async (req, res) => {
     try {
         const tutorias = await Tutoria.find({ tutor: req.params.tutorId })
+            .populate('materia', 'nombre codigo semestre')
             .sort({ fecha: -1 });
 
         res.json({
@@ -242,6 +255,7 @@ router.get('/disponibles', requireAuth, async (req, res) => {
 
         const tutorias = await Tutoria.find(filtro)
             .populate('tutor', 'nombre apellido')
+            .populate('materia', 'nombre codigo semestre')
             .sort({ fecha: 1, horaInicio: 1 });
 
         console.log(`✅ Tutorías encontradas: ${tutorias.length}`);

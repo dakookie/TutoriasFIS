@@ -2,8 +2,13 @@ const mongoose = require('mongoose');
 
 const tutoriaSchema = new mongoose.Schema({
     materia: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Materia',
         required: [true, 'La materia es requerida']
+    },
+    materiaNombre: {
+        type: String,
+        required: true
     },
     fecha: {
         type: Date,

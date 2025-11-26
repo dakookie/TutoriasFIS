@@ -56,6 +56,7 @@ app.set('io', io);
 // Rutas API (ANTES de static para que tengan prioridad)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/materias', require('./routes/materias'));
 app.use('/api/tutorias', require('./routes/tutorias'));
 app.use('/api/solicitudes', require('./routes/solicitudes'));
 app.use('/api/encuestas', require('./routes/encuestas'));

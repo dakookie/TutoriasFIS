@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-forgot-password');
     const mensajeDiv = document.getElementById('mensaje-forgot');
     const tokenDisplay = document.getElementById('token-display');
-    const btnSubmit = document.getElementById('btn-submit');
+    const btnSubmit = form.querySelector('button[type="submit"]');
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();

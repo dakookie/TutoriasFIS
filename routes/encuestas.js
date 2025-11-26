@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Pregunta = require('../models/Pregunta');
+const Materia = require('../models/Materia');
 const Respuesta = require('../models/Respuesta');
 const Solicitud = require('../models/Solicitud');
 const { requireAuth, requireRole } = require('../middleware/auth');
@@ -10,9 +11,19 @@ router.post('/preguntas', requireRole('Administrador'), async (req, res) => {
     try {
         const { pregunta, materia } = req.body;
 
+        // Obtener nombre de la materia
+        const materiaDoc = await Materia.findById(materia);
+        if (!materiaDoc) {
+            return res.status(404).json({
+                success: false,
+                message: 'Materia no encontrada'
+            });
+        }
+
         const nuevaPregunta = new Pregunta({
             pregunta,
-            materia
+            materia,
+            materiaNombre: materiaDoc.nombre
         });
 
         await nuevaPregunta.save();

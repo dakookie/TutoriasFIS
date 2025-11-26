@@ -62,7 +62,7 @@ async function cargarTutoriasDisponibles() {
         }
 
         if (tutorias.length === 0) {
-            container.innerHTML = '<div class="alert alert-warning text-center">No hay tutorías disponibles en este momento.</div>';
+            container.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">No hay tutorías disponibles en este momento.</td></tr>';
             return;
         }
 
@@ -73,7 +73,7 @@ async function cargarTutoriasDisponibles() {
             solicitudes = solicitudesResponse.solicitudes;
         }
 
-        let html = '<table class="table table-striped table-bordered table-hover"><thead><tr><th>Materia</th><th>Fecha</th><th>Hora Inicio</th><th>Hora Fin</th><th>Tutor</th><th>Cupos</th><th>Acciones</th></tr></thead><tbody>';
+        let html = '';
         
         tutorias.forEach(tutoria => {
             // Verificar si el estudiante ya tiene una solicitud para esta tutoría
@@ -83,31 +83,29 @@ async function cargarTutoriasDisponibles() {
             }) : null;
 
             html += `
-                <tr>
-                    <td>${tutoria.materia}</td>
-                    <td>${formatearFecha(tutoria.fecha)}</td>
-                    <td>${tutoria.horaInicio}</td>
-                    <td>${tutoria.horaFin}</td>
-                    <td>${tutoria.tutorNombre}</td>
-                    <td><span class="badge bg-info">${tutoria.cuposDisponibles}</span></td>
-                    <td>
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-700">${tutoria.materiaNombre || tutoria.materia}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${formatearFecha(tutoria.fecha)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${tutoria.horaInicio}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${tutoria.horaFin}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${tutoria.tutorNombre}</td>
+                    <td class="px-6 py-4">
                         ${!solicitudExistente && sesion ? `
-                            <button class="btn btn-sm btn-primary btn-solicitar" data-tutoria-id="${tutoria._id}">
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium transition btn-solicitar" data-tutoria-id="${tutoria._id}">
                                 Solicitar unirse
                             </button>
                         ` : solicitudExistente && solicitudExistente.estado === 'Pendiente' ? `
-                            <span class="badge bg-warning text-dark">Ya solicitaste</span>
+                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Ya solicitaste</span>
                         ` : solicitudExistente && solicitudExistente.estado === 'Aceptada' ? `
-                            <span class="badge bg-success">Aceptada</span>
+                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Aceptada</span>
                         ` : solicitudExistente && solicitudExistente.estado === 'Rechazada' ? `
-                            <span class="badge bg-danger">Rechazada</span>
+                            <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Rechazada</span>
                         ` : ''}
                     </td>
                 </tr>
             `;
         });
 
-        html += '</tbody></table>';
         container.innerHTML = html;
 
         // Agregar event listeners para los botones de solicitar
@@ -115,7 +113,7 @@ async function cargarTutoriasDisponibles() {
         
     } catch (error) {
         console.error('Error al cargar tutorías disponibles:', error);
-        container.innerHTML = '<div class="alert alert-danger">Error al cargar tutorías</div>';
+        container.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Error al cargar tutorías</td></tr>';
     }
 }
 
@@ -126,18 +124,18 @@ function agregarEventListenersSolicitar() {
             const sesion = await obtenerSesion();
             
             if (!sesion) {
-                alert('Debes iniciar sesión para solicitar una tutoría');
+                mostrarNotificacion('Advertencia', 'Debes iniciar sesión para solicitar una tutoría', 'warning');
                 return;
             }
             
             try {
                 const response = await APIClient.crearSolicitud(tutoriaId);
-                alert('Solicitud enviada exitosamente');
+                mostrarNotificacion('Éxito', 'Solicitud enviada exitosamente', 'success');
                 await cargarTutoriasDisponibles();
                 await cargarSolicitudesEstudiante(sesion);
             } catch (error) {
                 console.error('Error al crear solicitud:', error);
-                alert(error.message || 'Error al enviar la solicitud');
+                mostrarNotificacion('Error', error.message || 'Error al enviar la solicitud', 'error');
             }
         });
     });
@@ -156,11 +154,11 @@ async function cargarSolicitudesEstudiante(sesion) {
         const solicitudes = response.solicitudes;
 
         if (solicitudes.length === 0) {
-            container.innerHTML = '<div class="alert alert-warning text-center">No se encontraron solicitudes de tutorías enviadas</div>';
+            container.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No se encontraron solicitudes de tutorías enviadas</td></tr>';
             return;
         }
 
-        let html = '<table class="table table-striped table-bordered table-hover"><thead><tr><th>Materia</th><th>Fecha</th><th>Hora</th><th>Tutor</th><th>Estado</th><th>Aula</th><th>Acciones</th></tr></thead><tbody>';
+        let html = '';
         
         for (const solicitud of solicitudes) {
             const puedeEliminar = solicitud.estado === 'Pendiente';
@@ -179,47 +177,49 @@ async function cargarSolicitudesEstudiante(sesion) {
                 }
             }
             
-            const estadoBadge = solicitud.estado === 'Aceptada' ? 'bg-success' : solicitud.estado === 'Rechazada' ? 'bg-danger' : 'bg-warning';
+            const estadoClass = solicitud.estado === 'Aceptada' ? 'bg-green-100 text-green-800' : 
+                               solicitud.estado === 'Rechazada' ? 'bg-red-100 text-red-800' : 
+                               'bg-yellow-100 text-yellow-800';
             
             html += `
-                <tr>
-                    <td>${solicitud.materia}</td>
-                    <td>${formatearFecha(solicitud.fecha)}</td>
-                    <td>${solicitud.horaInicio} - ${solicitud.horaFin}</td>
-                    <td>${solicitud.tutor}</td>
-                    <td><span class="badge ${estadoBadge}">${solicitud.estado}</span></td>
-                    <td>
-                        ${solicitud.estado === 'Aceptada' ? `
-                            <a href="/aula.html?id=${tutoriaId}" class="btn btn-sm btn-success">
-                                <i class="bi bi-door-open"></i> Ir al Aula
-                            </a>
-                        ` : `<span class="text-muted">-</span>`}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-700">${solicitud.materia}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${formatearFecha(solicitud.fecha)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${solicitud.horaInicio}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${solicitud.horaFin}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${solicitud.tutor}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 text-xs font-medium rounded-full ${estadoClass}">${solicitud.estado}</span>
                     </td>
-                    <td>
+                    <td class="px-6 py-4">
                         ${puedeEliminar ? `
-                            <button class="btn btn-sm btn-danger btn-eliminar-solicitud" data-solicitud-id="${solicitud._id}">
+                            <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium transition btn-eliminar-solicitud" data-solicitud-id="${solicitud._id}">
                                 Cancelar
                             </button>
                         ` : ''}
                         ${puedeCalificar && !yaCalificado ? `
-                            <button class="btn btn-sm btn-primary btn-calificar-tutoria" 
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium transition btn-calificar-tutoria" 
                                     data-tutoria-id="${tutoriaId}" 
                                     data-materia="${solicitud.materia}">
                                 Calificar
                             </button>
                         ` : puedeCalificar && yaCalificado ? `
-                            <button class="btn btn-sm btn-secondary" disabled>
+                            <button class="bg-gray-300 text-gray-600 px-4 py-2 rounded text-sm font-medium cursor-not-allowed" disabled>
                                 Calificada
                             </button>
                         ` : solicitud.estado === 'Rechazada' ? `
-                            <span class="text-muted">-</span>
+                            <span class="text-gray-400">-</span>
+                        ` : ''}
+                        ${solicitud.estado === 'Aceptada' ? `
+                            <a href="/aula.html?id=${tutoriaId}" class="ml-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium transition inline-block">
+                                Ir al Aula
+                            </a>
                         ` : ''}
                     </td>
                 </tr>
             `;
         }
 
-        html += '</tbody></table>';
         container.innerHTML = html;
 
         // Agregar event listeners
@@ -228,7 +228,7 @@ async function cargarSolicitudesEstudiante(sesion) {
         
     } catch (error) {
         console.error('Error al cargar solicitudes:', error);
-        container.innerHTML = '<div class="alert alert-danger">Error al cargar solicitudes</div>';
+        container.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Error al cargar solicitudes</td></tr>';
     }
 }
 
@@ -245,10 +245,10 @@ function agregarEventListenersEliminar() {
                     // Primero recargar solicitudes, luego tutorías
                     await cargarSolicitudesEstudiante(sesion);
                     await cargarTutoriasDisponibles();
-                    alert('Solicitud cancelada exitosamente');
+                    mostrarNotificacion('Éxito', 'Solicitud cancelada exitosamente', 'success');
                 } catch (error) {
                     console.error('Error al eliminar solicitud:', error);
-                    alert('Error al eliminar la solicitud: ' + error.message);
+                    mostrarNotificacion('Error', 'Error al eliminar la solicitud: ' + error.message, 'error');
                 }
             }
         });
@@ -273,7 +273,7 @@ async function abrirModalEncuesta(tutoriaId, materia) {
         const preguntas = response.preguntas;
         
         if (preguntas.length === 0) {
-            alert('No hay preguntas configuradas para esta materia. Por favor, contacta al administrador.');
+            mostrarNotificacion('Información', 'No hay preguntas configuradas para esta materia. Por favor, contacta al administrador.', 'info');
             return;
         }
     
@@ -285,39 +285,41 @@ async function abrirModalEncuesta(tutoriaId, materia) {
     titulo.textContent = `Formulario de calificación - ${materia}`;
     
     let html = `
-        <p class="text-center mb-4 text-muted">
+        <p class="text-center mb-6 text-gray-600">
             Por favor responde las siguientes preguntas
         </p>
     `;
     
         preguntas.forEach(pregunta => {
             html += `
-                <div class="mb-4 pb-3 border-bottom">
-                    <p class="fw-bold mb-3">${pregunta.pregunta}</p>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="pregunta-${pregunta._id}" 
-                               id="pregunta-${pregunta._id}-1" value="1">
-                        <label class="form-check-label" for="pregunta-${pregunta._id}-1">1 - Muy insatisfecho</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="pregunta-${pregunta._id}" 
-                               id="pregunta-${pregunta._id}-2" value="2">
-                        <label class="form-check-label" for="pregunta-${pregunta._id}-2">2 - Insatisfecho</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="pregunta-${pregunta._id}" 
-                               id="pregunta-${pregunta._id}-3" value="3">
-                        <label class="form-check-label" for="pregunta-${pregunta._id}-3">3 - Neutral</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="pregunta-${pregunta._id}" 
-                               id="pregunta-${pregunta._id}-4" value="4">
-                        <label class="form-check-label" for="pregunta-${pregunta._id}-4">4 - Satisfecho</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="pregunta-${pregunta._id}" 
-                               id="pregunta-${pregunta._id}-5" value="5">
-                        <label class="form-check-label" for="pregunta-${pregunta._id}-5">5 - Muy satisfecho</label>
+                <div class="mb-6 pb-4 border-b border-gray-200">
+                    <p class="font-semibold text-gray-800 mb-3">${pregunta.pregunta}</p>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                   id="pregunta-${pregunta._id}-1" value="1">
+                            <span class="text-gray-700">1 - Muy insatisfecho</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                   id="pregunta-${pregunta._id}-2" value="2">
+                            <span class="text-gray-700">2 - Insatisfecho</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                   id="pregunta-${pregunta._id}-3" value="3">
+                            <span class="text-gray-700">3 - Neutral</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                   id="pregunta-${pregunta._id}-4" value="4">
+                            <span class="text-gray-700">4 - Satisfecho</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                   id="pregunta-${pregunta._id}-5" value="5">
+                            <span class="text-gray-700">5 - Muy satisfecho</span>
+                        </label>
                     </div>
                 </div>
             `;
@@ -334,11 +336,12 @@ async function abrirModalEncuesta(tutoriaId, materia) {
             enviarEncuesta(tutoriaId, preguntas, sesion._id);
         });
         
-        modal.style.display = 'block';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
         
     } catch (error) {
         console.error('Error al abrir modal de encuesta:', error);
-        alert('Error al cargar el formulario: ' + error.message);
+        mostrarNotificacion('Error', 'Error al cargar el formulario: ' + error.message, 'error');
     }
 }
 
@@ -361,7 +364,7 @@ async function enviarEncuesta(tutoriaId, preguntas, estudianteId) {
     // Validar que todas las preguntas estén respondidas
     if (!todasRespondidas) {
         errorDiv.textContent = 'Por favor, responde a todas las preguntas antes de enviar.';
-        errorDiv.style.display = 'block';
+        errorDiv.classList.remove('hidden');
         return;
     }
     
@@ -369,21 +372,22 @@ async function enviarEncuesta(tutoriaId, preguntas, estudianteId) {
         // Guardar respuestas
         await APIClient.enviarRespuestas(tutoriaId, respuestas);
         
-        alert('¡Gracias por tu calificación! Tu opinión es muy importante.');
+        mostrarNotificacion('Éxito', '¡Gracias por tu calificación! Tu opinión es muy importante.', 'success');
         cerrarModalEncuesta();
         await cargarSolicitudesEstudiante();
     } catch (error) {
         console.error('Error al enviar encuesta:', error);
         errorDiv.textContent = error.message || 'Error al enviar la encuesta';
-        errorDiv.style.display = 'block';
+        errorDiv.classList.remove('hidden');
     }
 }
 
 function cerrarModalEncuesta() {
     const modal = document.getElementById('modal-encuesta');
     const errorDiv = document.getElementById('error-encuesta');
-    modal.style.display = 'none';
-    errorDiv.style.display = 'none';
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    errorDiv.classList.add('hidden');
 }
 
 // Función auxiliar para formatear fechas
@@ -407,4 +411,66 @@ function formatearFecha(fecha) {
     
     return fecha;
 }
+
+// Funciones para el modal de notificación
+function mostrarNotificacion(titulo, mensaje, tipo = 'info') {
+    const modal = document.getElementById('modal-notificacion');
+    const tituloElement = document.getElementById('titulo-notificacion');
+    const mensajeElement = document.getElementById('mensaje-notificacion');
+    const iconoElement = document.getElementById('icono-notificacion');
+    
+    tituloElement.textContent = titulo;
+    mensajeElement.textContent = mensaje;
+    
+    // Configurar icono según el tipo
+    let iconoHTML = '';
+    if (tipo === 'success') {
+        iconoHTML = `
+            <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        `;
+    } else if (tipo === 'error') {
+        iconoHTML = `
+            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        `;
+    } else if (tipo === 'warning') {
+        iconoHTML = `
+            <svg class="w-12 h-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+        `;
+    } else {
+        iconoHTML = `
+            <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        `;
+    }
+    
+    iconoElement.innerHTML = iconoHTML;
+    modal.classList.remove('hidden');
+}
+
+function cerrarModalNotificacion() {
+    const modal = document.getElementById('modal-notificacion');
+    modal.classList.add('hidden');
+}
+
+// Event listener para cerrar modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+        const modalNotificacion = document.getElementById('modal-notificacion');
+        if (modalNotificacion && !modalNotificacion.classList.contains('hidden')) {
+            cerrarModalNotificacion();
+        }
+        
+        const modalEncuesta = document.getElementById('modal-encuesta');
+        if (modalEncuesta && modalEncuesta.classList.contains('flex')) {
+            cerrarModalEncuesta();
+        }
+    }
+});
 

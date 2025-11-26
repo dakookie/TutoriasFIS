@@ -1,46 +1,115 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Plataforma de Tutorías FIS</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .mensaje {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+        }
+
+        .mensaje.error {
+            color: #dc2626;
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+        }
+
+        .mensaje.success {
+            color: #16a34a;
+            background-color: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* Imagen de fondo fija */
+        .bg-image-fixed {
+            object-fit: cover;
+            object-position: center;
+            will-change: auto;
+        }
+    </style>
 </head>
-<body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <header class="auth-header">
-                <h1>Plataforma de Tutorías FIS</h1>
-                <p>Sistema de gestión de tutorías - Ingeniería de Software EPN</p>
-            </header>
 
-            <div class="auth-content">
-                <h2>Iniciar Sesión</h2>
-                
-                <form id="form-login">
-                    <div class="form-group">
-                        <label for="usuario">Nombre de Usuario</label>
-                        <input type="text" id="usuario" name="usuario" required 
-                               placeholder="Ingresa tu nombre de usuario">
+<body class="bg-white">
+    <div class="min-h-screen flex relative">
+        <!-- Left Side Image -->
+        <div class="hidden lg:flex lg:w-1/2 relative bg-gray-100 overflow-hidden">
+            <img src="images/bg.png" alt="Estudiantes aprendiendo"
+                class="absolute inset-0 w-full h-full bg-image-fixed">
+            <div class="absolute inset-0 bg-blue-900/20 mix-blend-multiply pointer-events-none"></div>
+        </div>
+
+        <!-- Right Side Form -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-8">
+            <div class="w-full max-w-md">
+                <div class="text-left w-full mb-8">
+                    <div class="h-28 w-auto mb-6 flex items-center justify-center">
+                        <img src="images/logo-FIS-sin-fondo.png" alt="Tutorías FIS" class="h-full w-auto">
                     </div>
 
-                    <div class="form-group">
-                        <label for="password">Contraseña</label>
-                        <input type="password" id="password" name="password" required 
-                               placeholder="Ingresa tu contraseña">
+                    <h1 class="text-4xl font-bold text-[#007AA2E8] mb-2">Iniciar Sesión</h1>
+                    <p class="text-gray-600 text-sm">¡Bienvenido de nuevo! Por favor ingresa a tu cuenta.</p>
+                </div>
+
+                <form id="form-login" class="space-y-6">
+                    <div>
+                        <label for="usuario" class="block text-sm font-extrabold text-gray-700 mb-1">Usuario</label>
+                        <input id="usuario" name="usuario" type="text" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            placeholder="Ingresa tu usuario">
                     </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label for="password" class="block text-sm font-extrabold text-gray-700">Contraseña</label>
+                        </div>
+                        <div class="relative">
+                            <input id="password" name="password" type="password" required
+                                class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                                placeholder="Ingresa tu contraseña">
+                            <button type="button" id="togglePassword"
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-none text-gray-400 hover:text-gray-600">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <div id="mensaje-login" class="mensaje"></div>
+                    <div class="flex items-center justify-end">
+                        <a href="forgot-password.html" class="text-sm text-gray-600 hover:text-blue-800">¿Olvidaste tu
+                            contraseña?</a>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#000DFF] hover:bg-[#0000cc] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        Iniciar Sesión
+                    </button>
                 </form>
 
-                <div class="auth-footer">
-                    <p><a href="forgot-password.html">¿Olvidaste tu contraseña?</a></p>
-                    <p style="margin-top: 10px;">¿No tienes una cuenta? <a href="registro.html">Regístrate</a></p>
+                <div id="mensaje-login" class="mensaje"></div>
+
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        ¿No tienes una cuenta?
+                        <a href="registro.html" class="font-medium text-[#007AA2] hover:text-[#005f7a]">Regístrate</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -51,5 +120,16 @@
     <script src="js/socket-client.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/login.js"></script>
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+
+        togglePassword.addEventListener('click', function (e) {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('text-blue-500');
+        });
+    </script>
 </body>
+
 </html>

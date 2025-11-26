@@ -6,8 +6,13 @@ const preguntaSchema = new mongoose.Schema({
         required: [true, 'El texto de la pregunta es requerido']
     },
     materia: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Materia',
         required: [true, 'La materia es requerida']
+    },
+    materiaNombre: {
+        type: String,
+        required: true
     },
     activa: {
         type: Boolean,

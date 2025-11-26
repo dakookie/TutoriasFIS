@@ -28,8 +28,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     const loadingScreen = document.getElementById('loading-screen');
     const mainContent = document.getElementById('main-content');
     
-    if (loadingScreen) loadingScreen.style.display = 'none';
-    if (mainContent) mainContent.classList.add('show');
+    if (loadingScreen) loadingScreen.classList.add('hidden');
+    if (mainContent) mainContent.classList.remove('hidden');
+
+    // Inicializar tabs
+    initializeTabs();
 
     // Inicializar Socket.IO
     initializeSocket();
@@ -105,6 +108,37 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+function initializeTabs() {
+    const tabs = document.querySelectorAll('[data-tab]');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-tab');
+            
+            // Remove active class from all tabs
+            tabs.forEach(t => {
+                t.classList.remove('border-blue-600', 'text-blue-600');
+                t.classList.add('border-transparent', 'text-gray-700');
+            });
+            
+            // Add active class to clicked tab
+            this.classList.remove('border-transparent', 'text-gray-700');
+            this.classList.add('border-blue-600', 'text-blue-600');
+            
+            // Hide all tab panes
+            const panes = document.querySelectorAll('.tab-pane');
+            panes.forEach(pane => {
+                pane.classList.remove('show', 'active');
+            });
+            
+            // Show target pane
+            const targetPane = document.getElementById(targetId);
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+        });
+    });
+}
+
 async function cargarAulaInfo() {
     try {
         const response = await APIClient.getAulaInfo(tutoriaId);
@@ -113,11 +147,12 @@ async function cargarAulaInfo() {
         esTutor = esTutorResponse;
 
         // Actualizar títulos
-        document.getElementById('nombre-tutoria').textContent = `Aula: ${tutoria.materia}`;
-        document.getElementById('titulo-aula').textContent = `Aula Virtual: Aula de ${tutoria.materia.toUpperCase()}`;
+        const nombreMateria = tutoria.materiaNombre || tutoria.materia;
+        document.getElementById('nombre-tutoria').textContent = `Aula: ${nombreMateria}`;
+        document.getElementById('titulo-aula').textContent = `Aula Virtual: Aula de ${nombreMateria.toUpperCase()}`;
 
         // Actualizar información de la tutoría
-        document.getElementById('info-materia').textContent = tutoria.materia;
+        document.getElementById('info-materia').textContent = nombreMateria;
         
         // Mostrar modalidad
         const modalidad = tutoria.modalidadAula || 'No configurada';
@@ -125,24 +160,24 @@ async function cargarAulaInfo() {
         
         // Mostrar aula o enlace según modalidad
         if (tutoria.modalidadAula === 'Presencial') {
-            document.getElementById('info-aula-container').style.display = 'block';
-            document.getElementById('info-enlace-container').style.display = 'none';
+            document.getElementById('info-aula-container').classList.remove('hidden');
+            document.getElementById('info-enlace-container').classList.add('hidden');
             document.getElementById('info-aula').textContent = tutoria.nombreAula || '-';
         } else if (tutoria.modalidadAula === 'Virtual') {
-            document.getElementById('info-aula-container').style.display = 'none';
-            document.getElementById('info-enlace-container').style.display = 'block';
+            document.getElementById('info-aula-container').classList.add('hidden');
+            document.getElementById('info-enlace-container').classList.remove('hidden');
             const linkReunion = document.getElementById('link-reunion');
             if (tutoria.enlaceReunion) {
                 linkReunion.href = tutoria.enlaceReunion;
                 linkReunion.textContent = 'Ir a la reunión';
-                linkReunion.classList.add('btn', 'btn-sm', 'btn-primary');
+                linkReunion.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition inline-block';
             } else {
                 linkReunion.textContent = '-';
             }
         } else {
             // No configurada
-            document.getElementById('info-aula-container').style.display = 'block';
-            document.getElementById('info-enlace-container').style.display = 'none';
+            document.getElementById('info-aula-container').classList.remove('hidden');
+            document.getElementById('info-enlace-container').classList.add('hidden');
             document.getElementById('info-aula').textContent = '-';
         }
         
@@ -160,16 +195,16 @@ async function cargarAulaInfo() {
 
         // Mostrar formularios solo si es tutor
         if (esTutor) {
-            document.getElementById('form-nueva-publicacion').style.display = 'block';
-            document.getElementById('form-subir-bibliografia').style.display = 'block';
+            document.getElementById('form-nueva-publicacion').classList.remove('hidden');
+            document.getElementById('form-subir-bibliografia').classList.remove('hidden');
             
             // Mostrar botón de configurar si no está configurada, o botón de editar si ya está configurada
             if (!tutoria.aulaConfigurada) {
-                document.getElementById('btn-configurar-aula').style.display = 'inline-block';
-                document.getElementById('btn-editar-configuracion-aula').style.display = 'none';
+                document.getElementById('btn-configurar-aula').classList.remove('hidden');
+                document.getElementById('btn-editar-configuracion-aula').classList.add('hidden');
             } else {
-                document.getElementById('btn-configurar-aula').style.display = 'none';
-                document.getElementById('btn-editar-configuracion-aula').style.display = 'inline-block';
+                document.getElementById('btn-configurar-aula').classList.add('hidden');
+                document.getElementById('btn-editar-configuracion-aula').classList.remove('hidden');
             }
         }
 
@@ -180,14 +215,37 @@ async function cargarAulaInfo() {
     }
 }
 
+// Funciones para manejar modales
+function mostrarModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function cerrarModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function cerrarModalConfiguracion() {
+    cerrarModal('modalConfiguracionAula');
+}
+
+function cerrarModalEditarPublicacion() {
+    cerrarModal('modalEditarPublicacion');
+}
+
+function cerrarModalEditarBibliografia() {
+    cerrarModal('modalEditarBibliografia');
+}
+
 async function mostrarModalConfiguracion(esEdicion = false) {
     const modalElement = document.getElementById('modalConfiguracionAula');
-    
-    // Crear modal con opciones que permiten cerrarlo
-    const modal = new bootstrap.Modal(modalElement, {
-        backdrop: true,  // Permite cerrar al hacer clic fuera
-        keyboard: true   // Permite cerrar con ESC
-    });
     
     // Obtener elementos del formulario
     const selectModalidad = document.getElementById('modalidad-aula');
@@ -212,15 +270,15 @@ async function mostrarModalConfiguracion(esEdicion = false) {
             if (tutoria.modalidadAula === 'Presencial') {
                 inputNombreAula.value = tutoria.nombreAula || '';
                 inputEnlaceReunion.value = '';
-                campoAulaPresencial.style.display = 'block';
-                campoEnlaceVirtual.style.display = 'none';
+                campoAulaPresencial.classList.remove('hidden');
+                campoEnlaceVirtual.classList.add('hidden');
                 inputNombreAula.required = true;
                 inputEnlaceReunion.required = false;
             } else if (tutoria.modalidadAula === 'Virtual') {
                 inputNombreAula.value = '';
                 inputEnlaceReunion.value = tutoria.enlaceReunion || '';
-                campoAulaPresencial.style.display = 'none';
-                campoEnlaceVirtual.style.display = 'block';
+                campoAulaPresencial.classList.add('hidden');
+                campoEnlaceVirtual.classList.remove('hidden');
                 inputNombreAula.required = false;
                 inputEnlaceReunion.required = true;
             }
@@ -232,8 +290,8 @@ async function mostrarModalConfiguracion(esEdicion = false) {
         selectModalidad.value = '';
         inputNombreAula.value = '';
         inputEnlaceReunion.value = '';
-        campoAulaPresencial.style.display = 'none';
-        campoEnlaceVirtual.style.display = 'none';
+        campoAulaPresencial.classList.add('hidden');
+        campoEnlaceVirtual.classList.add('hidden');
     }
 
     // Remover event listeners previos clonando elementos
@@ -252,20 +310,20 @@ async function mostrarModalConfiguracion(esEdicion = false) {
         const newCampoEnlaceVirtual = document.getElementById('campo-enlace-virtual');
         
         if (modalidad === 'Presencial') {
-            newCampoAulaPresencial.style.display = 'block';
-            newCampoEnlaceVirtual.style.display = 'none';
+            newCampoAulaPresencial.classList.remove('hidden');
+            newCampoEnlaceVirtual.classList.add('hidden');
             newInputNombreAula.required = true;
             newInputEnlaceReunion.required = false;
             newInputEnlaceReunion.value = '';
         } else if (modalidad === 'Virtual') {
-            newCampoAulaPresencial.style.display = 'none';
-            newCampoEnlaceVirtual.style.display = 'block';
+            newCampoAulaPresencial.classList.add('hidden');
+            newCampoEnlaceVirtual.classList.remove('hidden');
             newInputNombreAula.required = false;
             newInputNombreAula.value = '';
             newInputEnlaceReunion.required = true;
         } else {
-            newCampoAulaPresencial.style.display = 'none';
-            newCampoEnlaceVirtual.style.display = 'none';
+            newCampoAulaPresencial.classList.add('hidden');
+            newCampoEnlaceVirtual.classList.add('hidden');
             newInputNombreAula.required = false;
             newInputEnlaceReunion.required = false;
         }
@@ -301,12 +359,12 @@ async function mostrarModalConfiguracion(esEdicion = false) {
             }
             
             // Cerrar modal
-            modal.hide();
+            cerrarModal('modalConfiguracionAula');
             
             // Actualizar botones de configuración
             if (!esEdicion) {
-                document.getElementById('btn-configurar-aula').style.display = 'none';
-                document.getElementById('btn-editar-configuracion-aula').style.display = 'inline-block';
+                document.getElementById('btn-configurar-aula').classList.add('hidden');
+                document.getElementById('btn-editar-configuracion-aula').classList.remove('hidden');
             }
             
             // Recargar información del aula
@@ -325,7 +383,7 @@ async function mostrarModalConfiguracion(esEdicion = false) {
         }
     });
 
-    modal.show();
+    mostrarModal('modalConfiguracionAula');
 }
 
 function inicializarFormularioPublicacion() {
@@ -449,7 +507,7 @@ async function cargarPublicaciones() {
         const publicaciones = response.publicaciones;
 
         if (publicaciones.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center">No hay publicaciones aún</p>';
+            container.innerHTML = '<p class="text-gray-500 text-center py-8">No hay publicaciones aún</p>';
             return;
         }
 
@@ -464,28 +522,25 @@ async function cargarPublicaciones() {
             });
 
             html += `
-                <div class="card mb-3" id="publicacion-${pub._id}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title mb-0">${pub.titulo}</h5>
-                            ${esTutor ? `
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-primary btn-editar-publicacion" data-id="${pub._id}" data-titulo="${pub.titulo.replace(/"/g, '&quot;')}" data-contenido="${pub.contenido.replace(/"/g, '&quot;')}" data-imagen="${pub.imagen || ''}" data-tipoimagen="${pub.tipoImagen || ''}">
-                                        <i class="bi bi-pencil"></i> Editar
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-eliminar-publicacion" data-id="${pub._id}">
-                                        <i class="bi bi-trash"></i> Eliminar
-                                    </button>
-                                </div>
-                            ` : ''}
-                        </div>
-                        <p class="card-text">${pub.contenido}</p>
-                        ${pub.imagen ? `<div class="mt-3 mb-3"><img src="${pub.imagen}" alt="Imagen de publicación" class="img-fluid rounded" style="max-width: 100%; max-height: 400px;"></div>` : ''}
-                        <p class="text-muted small mb-0">
-                            <i class="bi bi-person-circle me-1"></i>${pub.tutorNombre} • 
-                            <i class="bi bi-calendar3 me-1"></i>${fecha}
-                        </p>
+                <div class="bg-white border border-gray-200 rounded-lg p-6 mb-4 shadow-sm" id="publicacion-${pub._id}">
+                    <div class="flex justify-between items-start mb-3">
+                        <h5 class="text-xl font-semibold text-gray-800">${pub.titulo}</h5>
+                        ${esTutor ? `
+                            <div class="flex space-x-2">
+                                <button class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-3 py-1 rounded text-sm font-medium transition btn-editar-publicacion" data-id="${pub._id}" data-titulo="${pub.titulo.replace(/"/g, '&quot;')}" data-contenido="${pub.contenido.replace(/"/g, '&quot;')}" data-imagen="${pub.imagen || ''}" data-tipoimagen="${pub.tipoImagen || ''}">
+                                    Editar
+                                </button>
+                                <button class="border border-red-600 text-red-600 hover:bg-red-50 px-3 py-1 rounded text-sm font-medium transition btn-eliminar-publicacion" data-id="${pub._id}">
+                                    Eliminar
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>
+                    <p class="text-gray-700 mb-3">${pub.contenido}</p>
+                    ${pub.imagen ? `<div class="mt-3 mb-3"><img src="${pub.imagen}" alt="Imagen de publicación" class="rounded-lg" style="max-width: 100%; max-height: 400px;"></div>` : ''}
+                    <p class="text-gray-500 text-sm">
+                        ${pub.tutorNombre} • ${fecha}
+                    </p>
                 </div>
             `;
         });
@@ -517,7 +572,7 @@ async function cargarPublicaciones() {
 
     } catch (error) {
         console.error('Error al cargar publicaciones:', error);
-        container.innerHTML = '<div class="alert alert-danger">Error al cargar publicaciones</div>';
+        container.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error al cargar publicaciones</div>';
     }
 }
 
@@ -529,56 +584,60 @@ async function cargarBibliografias() {
         const bibliografias = response.bibliografias;
 
         if (bibliografias.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center">No hay bibliografías disponibles</p>';
+            container.innerHTML = '<p class="text-gray-500 text-center py-8">No hay bibliografías disponibles</p>';
             return;
         }
 
-        let html = '<div class="list-group">';
+        let html = '';
         bibliografias.forEach(bib => {
-            let icono = 'bi-file-earmark-fill text-secondary';
-            let colorBadge = 'secondary';
+            let iconColor = 'text-gray-600';
+            let badgeColor = 'bg-gray-500';
+            let fileIcon = 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z';
             
             // Iconos según tipo de archivo
             if (bib.tipoArchivo === 'pdf') {
-                icono = 'bi-file-pdf-fill text-danger';
-                colorBadge = 'danger';
+                iconColor = 'text-red-600';
+                badgeColor = 'bg-red-500';
             } else if (bib.tipoArchivo === 'docx') {
-                icono = 'bi-file-word-fill text-primary';
-                colorBadge = 'primary';
+                iconColor = 'text-blue-600';
+                badgeColor = 'bg-blue-500';
             } else if (bib.tipoArchivo === 'xlsx') {
-                icono = 'bi-file-excel-fill text-success';
-                colorBadge = 'success';
+                iconColor = 'text-green-600';
+                badgeColor = 'bg-green-500';
             } else if (bib.tipoArchivo === 'ppt' || bib.tipoArchivo === 'pptx') {
-                icono = 'bi-file-ppt-fill text-warning';
-                colorBadge = 'warning';
+                iconColor = 'text-orange-600';
+                badgeColor = 'bg-orange-500';
             }
             
             html += `
-                <div class="list-group-item" id="bibliografia-${bib._id}">
-                    <div class="d-flex w-100 justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <h5 class="mb-1">
-                                <i class="bi ${icono} me-2"></i>${bib.titulo}
-                                <span class="badge bg-${colorBadge} ms-2">${bib.tipoArchivo.toUpperCase()}</span>
+                <div class="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm" id="bibliografia-${bib._id}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-grow">
+                            <h5 class="text-lg font-semibold text-gray-800 mb-1">
+                                <svg class="inline-block w-5 h-5 mr-2 -mt-1 ${iconColor}" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="${fileIcon}"></path>
+                                </svg>
+                                ${bib.titulo}
+                                <span class="inline-block ${badgeColor} text-white text-xs font-semibold px-2 py-1 rounded ml-2">${bib.tipoArchivo.toUpperCase()}</span>
                             </h5>
-                            <small class="text-muted">Subido por ${bib.tutorNombre}</small>
+                            <small class="text-gray-500">Subido por ${bib.tutorNombre}</small>
                         </div>
-                        <div class="btn-group btn-group-sm ms-3">
-                            <button class="btn btn-outline-primary btn-descargar-bibliografia" 
+                        <div class="flex space-x-2 ml-3">
+                            <button class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-3 py-1 rounded text-sm font-medium transition btn-descargar-bibliografia" 
                                     data-archivo="${bib.archivo}" 
                                     data-tipo="${bib.tipoArchivo}"
                                     data-titulo="${bib.titulo}">
-                                <i class="bi bi-download"></i> Descargar
+                                Descargar
                             </button>
                             ${esTutor ? `
-                                <button class="btn btn-outline-secondary btn-editar-bibliografia" 
+                                <button class="border border-gray-400 text-gray-700 hover:bg-gray-50 px-3 py-1 rounded text-sm font-medium transition btn-editar-bibliografia" 
                                         data-id="${bib._id}"
                                         data-titulo="${bib.titulo.replace(/"/g, '&quot;')}">
-                                    <i class="bi bi-pencil"></i>
+                                    Editar
                                 </button>
-                                <button class="btn btn-outline-danger btn-eliminar-bibliografia" 
+                                <button class="border border-red-600 text-red-600 hover:bg-red-50 px-3 py-1 rounded text-sm font-medium transition btn-eliminar-bibliografia" 
                                         data-id="${bib._id}">
-                                    <i class="bi bi-trash"></i>
+                                    Eliminar
                                 </button>
                             ` : ''}
                         </div>
@@ -586,7 +645,6 @@ async function cargarBibliografias() {
                 </div>
             `;
         });
-        html += '</div>';
 
         container.innerHTML = html;
 
@@ -622,7 +680,7 @@ async function cargarBibliografias() {
 
     } catch (error) {
         console.error('Error al cargar bibliografías:', error);
-        container.innerHTML = '<div class="alert alert-danger">Error al cargar bibliografías</div>';
+        container.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error al cargar bibliografías</div>';
     }
 }
 
@@ -638,11 +696,6 @@ function descargarArchivo(archivoBase64, tipo, titulo) {
 
 // Funciones para editar y eliminar publicaciones
 function mostrarModalEditarPublicacion(id, titulo, contenido, imagen, tipoImagen) {
-    const modal = new bootstrap.Modal(document.getElementById('modalEditarPublicacion'), {
-        backdrop: true,
-        keyboard: true
-    });
-
     document.getElementById('edit-publicacion-id').value = id;
     document.getElementById('edit-titulo-publicacion').value = titulo;
     document.getElementById('edit-contenido-publicacion').value = contenido;
@@ -651,9 +704,9 @@ function mostrarModalEditarPublicacion(id, titulo, contenido, imagen, tipoImagen
     // Mostrar imagen actual si existe
     const imagenContainer = document.getElementById('imagen-actual-container');
     if (imagen && imagen !== 'null' && imagen !== '') {
-        imagenContainer.innerHTML = `<img src="${imagen}" alt="Imagen actual" class="img-fluid rounded" style="max-width: 200px;">`;
+        imagenContainer.innerHTML = `<img src="${imagen}" alt="Imagen actual" class="rounded-lg" style="max-width: 200px;">`;
     } else {
-        imagenContainer.innerHTML = '<p class="text-muted">No hay imagen</p>';
+        imagenContainer.innerHTML = '<p class="text-gray-500">No hay imagen</p>';
     }
 
     // Event listener para guardar
@@ -695,7 +748,7 @@ function mostrarModalEditarPublicacion(id, titulo, contenido, imagen, tipoImagen
 
         try {
             await APIClient.editarPublicacion(tutoriaId, id, nuevoTitulo, nuevoContenido, nuevaImagen, nuevoTipoImagen);
-            modal.hide();
+            cerrarModal('modalEditarPublicacion');
             await cargarPublicaciones();
             alert('Publicación actualizada exitosamente');
         } catch (error) {
@@ -704,7 +757,7 @@ function mostrarModalEditarPublicacion(id, titulo, contenido, imagen, tipoImagen
         }
     });
 
-    modal.show();
+    mostrarModal('modalEditarPublicacion');
 }
 
 async function eliminarPublicacion(id) {
@@ -720,11 +773,6 @@ async function eliminarPublicacion(id) {
 
 // Funciones para editar y eliminar bibliografías
 function mostrarModalEditarBibliografia(id, titulo) {
-    const modal = new bootstrap.Modal(document.getElementById('modalEditarBibliografia'), {
-        backdrop: true,
-        keyboard: true
-    });
-
     document.getElementById('edit-bibliografia-id').value = id;
     document.getElementById('edit-titulo-bibliografia').value = titulo;
 
@@ -743,7 +791,7 @@ function mostrarModalEditarBibliografia(id, titulo) {
 
         try {
             await APIClient.editarBibliografia(tutoriaId, id, nuevoTitulo);
-            modal.hide();
+            cerrarModal('modalEditarBibliografia');
             await cargarBibliografias();
             alert('Bibliografía actualizada exitosamente');
         } catch (error) {
@@ -752,7 +800,7 @@ function mostrarModalEditarBibliografia(id, titulo) {
         }
     });
 
-    modal.show();
+    mostrarModal('modalEditarBibliografia');
 }
 
 async function eliminarBibliografia(id) {
@@ -765,3 +813,4 @@ async function eliminarBibliografia(id) {
         alert(error.message || 'Error al eliminar bibliografía');
     }
 }
+

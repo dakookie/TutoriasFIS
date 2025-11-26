@@ -49,9 +49,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Configurar botón volver en móviles
     document.getElementById('btn-volver-conversaciones').addEventListener('click', function() {
-        document.getElementById('conversaciones-panel').classList.remove('d-none');
-        document.getElementById('chat-activo').style.display = 'none';
-        document.getElementById('sin-seleccion').style.display = 'flex';
+        document.getElementById('chat-activo').classList.add('hidden');
+        document.getElementById('chat-activo').classList.remove('flex');
+        document.getElementById('sin-seleccion').classList.remove('hidden');
+        document.getElementById('sin-seleccion').classList.add('flex');
     });
 });
 
@@ -62,27 +63,48 @@ async function cargarConversaciones() {
         const listaConversaciones = document.getElementById('lista-conversaciones');
         const sinConversaciones = document.getElementById('sin-conversaciones');
 
-        loading.style.display = 'block';
+        // Mostrar loading
+        loading.classList.remove('hidden');
+        loading.classList.add('flex');
+        listaConversaciones.classList.add('hidden');
+        sinConversaciones.classList.add('hidden');
 
         const response = await APIClient.getConversaciones();
 
-        loading.style.display = 'none';
+        console.log('Conversaciones recibidas:', response);
+
+        // Ocultar loading
+        loading.classList.add('hidden');
+        loading.classList.remove('flex');
+
+        console.log('Success:', response.success);
+        console.log('Conversaciones array:', response.conversaciones);
+        console.log('Cantidad de conversaciones:', response.conversaciones ? response.conversaciones.length : 0);
 
         if (response.success && response.conversaciones && response.conversaciones.length > 0) {
+            console.log('✓ Mostrando conversaciones');
             listaConversaciones.innerHTML = '';
-            sinConversaciones.style.display = 'none';
+            listaConversaciones.classList.remove('hidden');
+            sinConversaciones.classList.add('hidden');
 
-            response.conversaciones.forEach(conv => {
+            response.conversaciones.forEach((conv, index) => {
+                console.log(`Creando conversación ${index + 1}:`, conv);
                 const item = crearItemConversacion(conv);
                 listaConversaciones.appendChild(item);
             });
         } else {
+            console.log('✗ No hay conversaciones disponibles');
             listaConversaciones.innerHTML = '';
-            sinConversaciones.style.display = 'block';
+            listaConversaciones.classList.add('hidden');
+            sinConversaciones.classList.remove('hidden');
+            sinConversaciones.classList.add('flex');
         }
 
     } catch (error) {
         console.error('Error al cargar conversaciones:', error);
+        const loading = document.getElementById('loading-conversaciones');
+        loading.classList.add('hidden');
+        loading.classList.remove('flex');
         mostrarError('Error al cargar conversaciones');
     }
 }
@@ -90,7 +112,7 @@ async function cargarConversaciones() {
 // Crear elemento de conversación
 function crearItemConversacion(conv) {
     const div = document.createElement('div');
-    div.className = 'conversacion-item';
+    div.className = 'conversacion-item border-b border-gray-200 px-4 py-3 cursor-pointer hover:bg-gray-50 transition';
     div.dataset.tutoriaId = conv.tutoria._id;
     
     // Guardar datos de participantes en el elemento
@@ -103,14 +125,14 @@ function crearItemConversacion(conv) {
     const participantes = conv.participantes || 0;
 
     const htmlContent = `
-        <div class="d-flex align-items-start">
-            <div class="flex-grow-1">
-                <div class="d-flex justify-content-between align-items-start">
-                    <h6 class="mb-1">${conv.tutoria.materia}</h6>
-                    ${noLeidos > 0 ? `<span class="badge bg-danger rounded-pill">${noLeidos}</span>` : ''}
+        <div class="flex items-start">
+            <div class="flex-1">
+                <div class="flex justify-between items-start mb-1">
+                    <h3 class="font-semibold text-gray-800">${conv.tutoria.materia}</h3>
+                    ${noLeidos > 0 ? `<span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">${noLeidos}</span>` : ''}
                 </div>
-                <small class="text-muted d-block">${fecha} • ${participantes} participante${participantes !== 1 ? 's' : ''}</small>
-                <p class="mb-0 text-truncate ultimo-mensaje">${ultimoMensaje}</p>
+                <p class="text-xs text-gray-500 mb-1">${fecha} • ${participantes} participante${participantes !== 1 ? 's' : ''}</p>
+                <p class="text-sm text-gray-600 truncate ultimo-mensaje">${ultimoMensaje}</p>
             </div>
         </div>
     `;
@@ -169,9 +191,12 @@ async function seleccionarConversacion(conv) {
 
         // Marcar conversación como activa
         document.querySelectorAll('.conversacion-item').forEach(item => {
-            item.classList.remove('activa');
+            item.classList.remove('active', 'bg-blue-50', 'border-l-4', 'border-blue-600');
         });
-        document.querySelector(`[data-tutoria-id="${conversacionActual}"]`)?.classList.add('activa');
+        const itemActivo = document.querySelector(`[data-tutoria-id="${conversacionActual}"]`);
+        if (itemActivo) {
+            itemActivo.classList.add('active', 'bg-blue-50', 'border-l-4', 'border-blue-600');
+        }
 
         // En móviles, ocultar panel de conversaciones
         if (window.innerWidth < 768) {
@@ -179,8 +204,9 @@ async function seleccionarConversacion(conv) {
         }
 
         // Mostrar chat
-        document.getElementById('sin-seleccion').style.display = 'none';
-        document.getElementById('chat-activo').style.display = 'flex';
+        document.getElementById('sin-seleccion').classList.add('hidden');
+        document.getElementById('chat-activo').classList.remove('hidden');
+        document.getElementById('chat-activo').classList.add('flex');
 
         // Cargar mensajes
         await cargarMensajes();
@@ -204,7 +230,7 @@ async function cargarMensajes() {
             container.innerHTML = '';
 
             if (response.mensajes.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted py-5">No hay mensajes aún. ¡Envía el primero!</div>';
+                container.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-gray-500 text-center">No hay mensajes aún. ¡Envía el primero!</p></div>';
             } else {
                 response.mensajes.forEach(mensaje => {
                     agregarMensajeUI(mensaje);
@@ -230,7 +256,7 @@ function agregarMensajeUI(mensaje, esPropio = null) {
     }
     
     // Remover mensaje de "sin mensajes"
-    const sinMensajes = container.querySelector('.text-center.text-muted');
+    const sinMensajes = container.querySelector('.text-center.text-gray-500');
     if (sinMensajes) {
         sinMensajes.remove();
     }
@@ -241,18 +267,31 @@ function agregarMensajeUI(mensaje, esPropio = null) {
     }
 
     const div = document.createElement('div');
-    div.className = `mensaje ${esPropio ? 'mensaje-propio' : 'mensaje-otro'}`;
+    div.className = `flex mb-4 ${esPropio ? 'justify-end mensaje-enviado' : 'justify-start mensaje-recibido'}`;
     div.dataset.mensajeId = mensaje._id;
 
     const fecha = new Date(mensaje.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    div.innerHTML = `
-        <div class="mensaje-content">
-            ${!esPropio ? `<div class="mensaje-autor">${mensaje.emisorNombre}</div>` : ''}
-            <div class="mensaje-texto">${escapeHtml(mensaje.contenido)}</div>
-            <div class="mensaje-hora">${fecha}</div>
-        </div>
-    `;
+    if (esPropio) {
+        div.innerHTML = `
+            <div class="max-w-sm lg:max-w-lg xl:max-w-xl">
+                <div class="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-md">
+                    <p class="text-sm break-words">${escapeHtml(mensaje.contenido)}</p>
+                </div>
+                <p class="text-xs text-gray-500 mt-1 text-right">${fecha}</p>
+            </div>
+        `;
+    } else {
+        div.innerHTML = `
+            <div class="max-w-sm lg:max-w-lg xl:max-w-xl">
+                <p class="text-xs font-medium text-gray-700 mb-1">${mensaje.emisorNombre}</p>
+                <div class="bg-gray-100 border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-md">
+                    <p class="text-sm text-gray-800 break-words">${escapeHtml(mensaje.contenido)}</p>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">${fecha}</p>
+            </div>
+        `;
+    }
 
     container.appendChild(div);
 }
@@ -321,7 +360,7 @@ function configurarIndicadorEscritura() {
 function actualizarContadorCaracteres() {
     const input = document.getElementById('input-mensaje');
     const contador = document.getElementById('contador-caracteres');
-    contador.textContent = input.value.length;
+    contador.textContent = `${input.value.length}/1000`;
 }
 
 // Configurar eventos de Socket.IO
@@ -349,14 +388,18 @@ function configurarEventosSocket() {
     // Usuario escribiendo
     chatSocket.on('chat:usuario-escribiendo', (data) => {
         if (data.tutoriaId === conversacionActual) {
-            document.getElementById('usuario-escribiendo').style.display = 'inline-block';
+            const indicador = document.getElementById('usuario-escribiendo');
+            indicador.classList.remove('hidden');
+            indicador.classList.add('flex');
         }
     });
 
     // Usuario dejó de escribir
     chatSocket.on('chat:usuario-dejo-escribir', (data) => {
         if (data.tutoriaId === conversacionActual) {
-            document.getElementById('usuario-escribiendo').style.display = 'none';
+            const indicador = document.getElementById('usuario-escribiendo');
+            indicador.classList.add('hidden');
+            indicador.classList.remove('flex');
         }
     });
 

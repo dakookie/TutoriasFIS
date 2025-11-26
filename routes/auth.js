@@ -238,10 +238,22 @@ router.post('/reset-password', async (req, res) => {
             });
         }
 
-        if (newPassword.length < 6) {
+        // Validar contraseña (mínimo 8 caracteres, con letra, número y carácter especial)
+        if (newPassword.length < 8) {
             return res.status(400).json({
                 success: false,
-                message: 'La contraseña debe tener al menos 6 caracteres'
+                message: 'La contraseña debe tener al menos 8 caracteres'
+            });
+        }
+
+        const tieneLetra = /[a-zA-Z]/.test(newPassword);
+        const tieneNumero = /[0-9]/.test(newPassword);
+        const tieneEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+        
+        if (!tieneLetra || !tieneNumero || !tieneEspecial) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña debe incluir al menos una letra, un número y un carácter especial'
             });
         }
 

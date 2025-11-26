@@ -1,48 +1,141 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - Plataforma de Tutorías FIS</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .mensaje {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+        }
+
+        .mensaje.error {
+            color: #dc2626;
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+        }
+
+        .mensaje.exito,
+        .mensaje.success {
+            color: #16a34a;
+            background-color: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        /* File Upload Styling */
+        .file-upload-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            background-color: #f9fafb;
+        }
+
+        .file-upload-label:hover {
+            border-color: #000DFF;
+            background-color: #eff6ff;
+        }
+
+        .file-uploaded {
+            border-color: #16a34a;
+            background-color: #f0fdf4;
+            color: #16a34a;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Imagen de fondo fija */
+        .bg-image-fixed {
+            object-fit: cover;
+            object-position: center;
+            will-change: auto;
+        }
+    </style>
 </head>
-<body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <header class="auth-header">
-                <h1>Plataforma de Tutorías FIS</h1>
-                <p>Sistema de gestión de tutorías - Ingeniería de Software EPN</p>
-            </header>
 
-            <div class="auth-content">
-                <h2>Registro de Usuario</h2>
-                
-                <form id="form-registro">
-                    <div class="form-group">
-                        <label for="nombre">Nombre *</label>
-                        <input type="text" id="nombre" name="nombre" required 
-                               placeholder="Ingresa tu nombre">
-                        <span class="error-message" id="error-nombre"></span>
+<body class="bg-white">
+    <div class="min-h-screen flex relative">
+        <!-- Left Side Image -->
+        <div class="hidden lg:flex lg:w-1/2 fixed left-0 top-0 h-screen bg-gray-100 overflow-hidden">
+            <img src="images/bg.png" alt="Estudiantes aprendiendo"
+                class="absolute inset-0 w-full h-full bg-image-fixed">
+            <div class="absolute inset-0 bg-blue-900/20 mix-blend-multiply pointer-events-none"></div>
+        </div>
+
+        <!-- Right Side Form -->
+        <div
+            class="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-4 lg:p-6 overflow-y-auto min-h-screen">
+            <div class="w-full max-w-md py-4">
+                <div class="text-left w-full mb-4">
+                    <div class="h-20 w-auto mb-3 flex items-center justify-center">
+                        <img src="images/logo-FIS-sin-fondo.png" alt="Tutorías FIS" class="h-full w-auto">
                     </div>
 
-                    <div class="form-group">
-                        <label for="apellido">Apellido *</label>
-                        <input type="text" id="apellido" name="apellido" required 
-                               placeholder="Ingresa tu apellido">
-                        <span class="error-message" id="error-apellido"></span>
+                    <h1 class="text-2xl lg:text-3xl font-bold text-[#007AA2E8] mb-1">Crear Cuenta</h1>
+                    <p class="text-gray-600 text-xs lg:text-sm">Regístrate para comenzar a usar la plataforma.</p>
+                </div>
+
+                <form id="form-registro" class="space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label for="nombre"
+                                class="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">Nombre *</label>
+                            <input id="nombre" name="nombre" type="text" required
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"
+                                placeholder="Tu nombre">
+                            <span class="error-message" id="error-nombre"></span>
+                        </div>
+
+                        <div>
+                            <label for="apellido"
+                                class="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">Apellido *</label>
+                            <input id="apellido" name="apellido" type="text" required
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"
+                                placeholder="Tu apellido">
+                            <span class="error-message" id="error-apellido"></span>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="correo">Correo Institucional *</label>
-                        <input type="email" id="correo" name="correo" required 
-                               placeholder="ejemplo@epn.edu.ec">
+                    <div>
+                        <label for="correo" class="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">Correo
+                            Institucional *</label>
+                        <input id="correo" name="correo" type="email" required
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"
+                            placeholder="ejemplo@epn.edu.ec">
                         <span class="error-message" id="error-correo"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="rol">Rol *</label>
-                        <select id="rol" name="rol" required>
+                    <div>
+                        <label for="rol" class="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">Rol
+                            *</label>
+                        <select id="rol" name="rol" required
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-sm">
                             <option value="">Selecciona un rol</option>
                             <option value="Estudiante">Estudiante</option>
                             <option value="Tutor">Tutor</option>
@@ -50,51 +143,77 @@
                     </div>
 
                     <!-- Campo de materias (solo para tutores) -->
-                    <div class="form-group" id="grupo-materias" style="display: none;">
-                        <label for="materias">Materias que enseñas *</label>
-                        <input type="text" id="materias" name="materias" 
-                               placeholder="Ej: Matemáticas, Física, Química (separadas por comas)">
+                    <div id="grupo-materias" style="display: none;">
+                        <label for="materias"
+                            class="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">Materias que enseñas
+                            *</label>
+                        <input id="materias" name="materias" type="text"
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"
+                            placeholder="Ej: Matemáticas, Física (separadas por comas)">
                         <span class="error-message" id="error-materias"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="usuario">Nombre de Usuario *</label>
-                        <input type="text" id="usuario" name="usuario" required 
-                               placeholder="Ingresa tu nombre de usuario">
+                    <div>
+                        <label for="usuario" class="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">Nombre
+                            de Usuario *</label>
+                        <input id="usuario" name="usuario" type="text" required
+                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"
+                            placeholder="Crea un nombre de usuario">
                         <span class="error-message" id="error-usuario"></span>
                     </div>
 
-                    <div class="form-group">
-                        <label for="password">Contraseña *</label>
-                        <input type="password" id="password" name="password" required 
-                               placeholder="Mínimo 8 caracteres">
+                    <div>
+                        <label for="password"
+                            class="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">Contraseña *</label>
+                        <div class="relative">
+                            <input id="password" name="password" type="password" required
+                                class="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"
+                                placeholder="Mínimo 8 caracteres">
+                            <button type="button" id="togglePassword"
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-none text-gray-400 hover:text-gray-600">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
                         <span class="error-message" id="error-password"></span>
                     </div>
 
                     <!-- Campo de archivo (se muestra según el rol) -->
-                    <div class="form-group" id="grupo-archivo" style="display: none;">
-                        <label for="archivo" id="label-archivo">Documento PDF *</label>
+                    <div id="grupo-archivo" style="display: none;">
+                        <label id="label-archivo"
+                            class="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">Documento PDF *</label>
                         <div class="file-upload-wrapper">
                             <input type="file" id="archivo" name="archivo" accept=".pdf">
-                            <label for="archivo" class="file-upload-label">
-                                <span class="file-upload-icon">📄</span>
-                                <span class="file-upload-text" id="nombre-archivo">Seleccionar archivo PDF</span>
+                            <label for="archivo" class="file-upload-label text-gray-600">
+                                <span class="text-xl mr-2">📄</span>
+                                <span id="nombre-archivo" class="text-xs lg:text-sm font-medium">Seleccionar archivo
+                                    PDF</span>
                             </label>
                         </div>
                         <span class="error-message" id="error-archivo"></span>
                     </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Registrar</button>
-                        <button type="button" class="btn btn-secondary" id="btn-cancelar">Cancelar</button>
+                    <div class="pt-1">
+                        <button type="submit"
+                            class="w-full py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#000DFF] hover:bg-[#0000cc] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            Registrar
+                        </button>
                     </div>
 
                     <div id="mensaje-registro" class="mensaje"></div>
-                </form>
 
-                <div class="auth-footer">
-                    <p>¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a></p>
-                </div>
+                    <div class="mt-3 text-center">
+                        <p class="text-xs lg:text-sm text-gray-600">
+                            ¿Ya tienes una cuenta?
+                            <a href="login.html" class="font-medium text-[#007AA2] hover:text-[#005f7a]">Inicia sesión
+                                aquí</a>
+                        </p>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -104,5 +223,16 @@
     <script src="js/socket-client.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/registro.js"></script>
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+
+        togglePassword.addEventListener('click', function (e) {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('text-blue-500');
+        });
+    </script>
 </body>
+
 </html>
