@@ -1,0 +1,33 @@
+{
+  "name": "tutorias-fis",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de tutorías FIS - EPN",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": [
+    "tutorías",
+    "express",
+    "mongodb",
+    "socket.io"
+  ],
+  "author": "EPN - FIS",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "morgan": "^1.10.0",
+    "socket.io": "^4.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

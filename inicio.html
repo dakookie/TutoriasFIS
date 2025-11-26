@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido - Plataforma de Tutorías FIS</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <style>
+        .hero {
+            text-align: center;
+            padding: 60px 30px;
+        }
+        
+        .hero h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .hero p {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .cta-buttons .btn {
+            min-width: 200px;
+            padding: 15px 30px;
+            font-size: 1.1em;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card" style="max-width: 900px;">
+            <header class="auth-header">
+                <h1>Plataforma de Tutorías FIS</h1>
+                <p>Sistema de gestión de tutorías - Ingeniería de Software EPN</p>
+            </header>
+
+            <div class="auth-content">
+                <div class="hero">
+                    <h2>Bienvenido al Sistema de Tutorías</h2>
+                    <p>
+                        Conectamos a estudiantes con tutores expertos en las materias de la carrera de Ingeniería de Software.
+                        Fomenta un entorno organizado y colaborativo que impulsa el crecimiento académico.
+                    </p>
+                    
+                    <div class="cta-buttons">
+                        <a href="login.html" class="btn btn-primary">Iniciar Sesión</a>
+                        <a href="registro.html" class="btn btn-success">Registrarse</a>
+                    </div>
+                </div>
+
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <h3>Para Estudiantes</h3>
+                        <p>Encuentra tutorías de las materias que necesitas, solicita tu lugar y mejora tu desempeño académico.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">👨‍🏫</div>
+                        <h3>Para Tutores</h3>
+                        <p>Comparte tu conocimiento, programa tus sesiones y ayuda a otros estudiantes a alcanzar sus metas.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">⚙️</div>
+                        <h3>Gestión Eficiente</h3>
+                        <p>Sistema completo de gestión de tutorías, solicitudes y usuarios con interfaz intuitiva.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Si ya hay sesión activa, redirigir automáticamente
+        const sesion = sessionStorage.getItem('sesionActual');
+        if (sesion) {
+            const usuario = JSON.parse(sesion);
+            if (usuario.rol === 'Administrador') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>
