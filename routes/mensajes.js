@@ -84,7 +84,7 @@ router.get('/conversaciones', requireAuth, async (req, res) => {
             // Tutorías donde es tutor
             tutorias = await Tutoria.find({ tutor: userId })
                 .populate('tutor', 'nombre apellido')
-                .select('materia fecha tutor tutorNombre')
+                .select('materia materiaNombre fecha tutor tutorNombre')
                 .lean();
         } else {
             // Tutorías donde es estudiante aceptado
@@ -96,51 +96,60 @@ router.get('/conversaciones', requireAuth, async (req, res) => {
             const tutoriaIds = solicitudes.map(s => s.tutoria);
             tutorias = await Tutoria.find({ _id: { $in: tutoriaIds } })
                 .populate('tutor', 'nombre apellido')
-                .select('materia fecha tutor tutorNombre')
+                .select('materia materiaNombre fecha tutor tutorNombre')
                 .lean();
         }
 
         // Para cada tutoría, obtener participantes, último mensaje y contar no leídos
         const conversaciones = await Promise.all(tutorias.map(async (tutoria) => {
-            // Obtener estudiantes aceptados en esta tutoría
-            const solicitudesAceptadas = await Solicitud.find({
-                tutoria: tutoria._id,
-                estado: 'Aceptada'
-            }).populate('estudiante', 'nombre apellido').lean();
+            try {
+                // Obtener estudiantes aceptados en esta tutoría
+                const solicitudesAceptadas = await Solicitud.find({
+                    tutoria: tutoria._id,
+                    estado: 'Aceptada'
+                }).populate('estudiante', 'nombre apellido').lean();
 
-            const estudiantes = solicitudesAceptadas.map(s => ({
-                _id: s.estudiante._id,
-                nombre: s.estudiante.nombre,
-                apellido: s.estudiante.apellido
-            }));
+                // Filtrar solo estudiantes que existen (populate no devolvió null)
+                const estudiantes = solicitudesAceptadas
+                    .filter(s => s.estudiante)
+                    .map(s => ({
+                        _id: s.estudiante._id,
+                        nombre: s.estudiante.nombre,
+                        apellido: s.estudiante.apellido
+                    }));
 
-            const ultimoMensaje = await Mensaje.findOne({ tutoria: tutoria._id })
-                .sort({ createdAt: -1 })
-                .lean();
+                const ultimoMensaje = await Mensaje.findOne({ tutoria: tutoria._id })
+                    .sort({ createdAt: -1 })
+                    .lean();
 
-            const noLeidos = await Mensaje.countDocuments({
-                tutoria: tutoria._id,
-                receptor: userId,
-                leido: false
-            });
+                const noLeidos = await Mensaje.countDocuments({
+                    tutoria: tutoria._id,
+                    receptor: userId,
+                    leido: false
+                });
 
-            return {
-                tutoria: {
-                    _id: tutoria._id,
-                    materia: tutoria.materia,
-                    fecha: tutoria.fecha,
-                    tutor: tutoria.tutor,
-                    tutorNombre: tutoria.tutorNombre
-                },
-                estudiantes,
-                participantes: estudiantes.length + 1, // +1 por el tutor
-                ultimoMensaje,
-                mensajesNoLeidos: noLeidos
-            };
+                return {
+                    tutoria: {
+                        _id: tutoria._id,
+                        materia: tutoria.materiaNombre || tutoria.materia,
+                        fecha: tutoria.fecha,
+                        tutor: tutoria.tutor,
+                        tutorNombre: tutoria.tutorNombre
+                    },
+                    estudiantes,
+                    participantes: estudiantes.length + 1, // +1 por el tutor
+                    ultimoMensaje,
+                    mensajesNoLeidos: noLeidos
+                };
+            } catch (error) {
+                console.error(`Error procesando tutoría ${tutoria._id}:`, error);
+                return null;
+            }
         }));
 
-        // Filtrar solo tutorías con al menos un estudiante
-        const conversacionesConParticipantes = conversaciones.filter(c => c.estudiantes.length > 0);
+        // Filtrar conversaciones nulas (que tuvieron error) y con al menos un estudiante
+        const conversacionesConParticipantes = conversaciones
+            .filter(c => c !== null && c.estudiantes.length > 0);
 
         // Ordenar por última actividad
         conversacionesConParticipantes.sort((a, b) => {

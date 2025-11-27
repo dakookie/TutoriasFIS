@@ -21,7 +21,16 @@ function initializeSocket() {
 
     // Eventos para tutores
     socket.on('nuevaSolicitud', (data) => {
-        mostrarNotificacion(`Nueva solicitud para ${data.tutoria}`, 'info');
+        const mensaje = `Nueva solicitud para ${data.tutoria}`;
+        
+        // Verificar si existe la función mostrarNotificacion del tutor.js
+        if (typeof window.mostrarNotificacion === 'function') {
+            window.mostrarNotificacion('Nueva Solicitud', mensaje);
+        } else {
+            // Usar notificación simple si no está disponible
+            mostrarNotificacion(mensaje);
+        }
+        
         // Recargar solicitudes si estamos en vista tutor
         if (typeof cargarTutoriasCreadas === 'function') {
             cargarTutoriasCreadas();

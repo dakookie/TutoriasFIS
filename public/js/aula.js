@@ -146,13 +146,13 @@ async function cargarAulaInfo() {
         
         esTutor = esTutorResponse;
 
-        // Actualizar títulos
-        const nombreMateria = tutoria.materiaNombre || tutoria.materia;
-        document.getElementById('nombre-tutoria').textContent = `Aula: ${nombreMateria}`;
-        document.getElementById('titulo-aula').textContent = `Aula Virtual: Aula de ${nombreMateria.toUpperCase()}`;
+        // Mostrar nombre legible de la materia
+        const materiaNombre = tutoria.materiaNombre || tutoria.materia?.nombre || tutoria.materia || '[Sin materia]';
+        document.getElementById('nombre-tutoria').textContent = `Aula: ${materiaNombre}`;
+        document.getElementById('titulo-aula').textContent = `Aula Virtual: Aula de ${materiaNombre.toUpperCase()}`;
 
         // Actualizar información de la tutoría
-        document.getElementById('info-materia').textContent = nombreMateria;
+        document.getElementById('info-materia').textContent = materiaNombre;
         
         // Mostrar modalidad
         const modalidad = tutoria.modalidadAula || 'No configurada';

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Materia = require('../models/Materia');
-const auth = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 
 // Obtener todas las materias activas
-router.get('/', auth, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
     try {
         const materias = await Materia.find({ activa: true })
             .sort({ semestre: 1, nombre: 1 })
@@ -21,7 +21,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Obtener materias por semestre
-router.get('/semestre/:semestre', auth, async (req, res) => {
+router.get('/semestre/:semestre', requireAuth, async (req, res) => {
     try {
         const { semestre } = req.params;
         const materias = await Materia.find({ 
@@ -42,7 +42,7 @@ router.get('/semestre/:semestre', auth, async (req, res) => {
 });
 
 // Obtener una materia por ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
     try {
         const materia = await Materia.findById(req.params.id);
         

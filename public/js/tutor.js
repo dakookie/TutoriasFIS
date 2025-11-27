@@ -4,47 +4,30 @@
 // HU-005: Filtro de solicitudes por estado
 
 let filtroEstadoSolicitudes = 'Todas';
-
-// Cargar materias dinámicamente para el formulario de tutoría
-async function cargarMateriasParaTutoria() {
-    try {
-        const materias = await APIClient.obtenerMaterias();
-        const materiaSelect = document.getElementById('materia');
-        
-        materiaSelect.innerHTML = '<option value="">Selecciona una materia</option>';
-        materias.forEach(materia => {
-            const option = document.createElement('option');
-            option.value = materia._id;
-            option.textContent = materia.nombre;
-            option.dataset.nombre = materia.nombre;
-            materiaSelect.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error al cargar materias:', error);
-        mostrarNotificacion('Error', 'No se pudieron cargar las materias', 'error');
-    }
-}
+let filtroInicializadoTutor = false;
 
 // Inicializar filtro de estado de solicitudes
 function inicializarFiltroEstadoSolicitudes() {
     const filtroSelect = document.getElementById('filtro-estado-solicitudes');
     if (!filtroSelect) return;
-
-    // Establecer el valor actual del filtro en el select
-    filtroSelect.value = filtroEstadoSolicitudes;
-
-    // Remover listeners anteriores
-    const newFiltroSelect = filtroSelect.cloneNode(true);
-    filtroSelect.parentNode.replaceChild(newFiltroSelect, filtroSelect);
+    
+    // Solo inicializar una vez
+    if (filtroInicializadoTutor) {
+        // Solo restaurar el valor
+        filtroSelect.value = filtroEstadoSolicitudes;
+        return;
+    }
 
     // Restaurar el valor seleccionado
-    newFiltroSelect.value = filtroEstadoSolicitudes;
+    filtroSelect.value = filtroEstadoSolicitudes;
 
-    newFiltroSelect.addEventListener('change', async function() {
+    filtroSelect.addEventListener('change', async function() {
         filtroEstadoSolicitudes = this.value;
         const sesion = await obtenerSesion();
         await cargarTutoriasCreadas(sesion);
     });
+    
+    filtroInicializadoTutor = true;
 }
 
 function inicializarFormularioTutoria(sesion) {
@@ -52,8 +35,24 @@ function inicializarFormularioTutoria(sesion) {
     const mensajeDiv = document.getElementById('mensaje-registro');
     const materiaSelect = document.getElementById('materia');
 
-    // Cargar materias desde la API
-    cargarMateriasParaTutoria();
+    // Cargar materias del tutor desde la API y poblar el select con nombre pero value=ID
+    async function cargarMaterias() {
+        materiaSelect.innerHTML = '<option value="">Selecciona una materia</option>';
+        try {
+            // Obtener todas las materias activas desde la colección
+            const materias = await APIClient.obtenerMaterias();
+            materias.forEach(materia => {
+                const option = document.createElement('option');
+                option.value = materia._id;
+                option.textContent = materia.nombre;
+                materiaSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error al cargar materias:', error);
+            materiaSelect.innerHTML += '<option value="" disabled>Error al cargar materias</option>';
+        }
+    }
+    cargarMaterias();
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -64,14 +63,14 @@ function inicializarFormularioTutoria(sesion) {
         mensajeDiv.style.display = 'none';
 
         // Obtener valores del formulario
-        const materia = document.getElementById('materia').value;
+        const materiaId = document.getElementById('materia').value;
         const fecha = document.getElementById('fecha').value;
         const horaInicio = document.getElementById('hora-inicio').value;
         const horaFin = document.getElementById('hora-fin').value;
         const cupos = parseInt(document.getElementById('cupos').value);
 
         // Validaciones personalizadas
-        if (!materia) {
+        if (!materiaId) {
             mostrarMensaje(mensajeDiv, 'Selecciona un elemento de la lista', 'error');
             return;
         }
@@ -100,15 +99,13 @@ function inicializarFormularioTutoria(sesion) {
 
         try {
             const tutoriaData = {
-                materia,
+                materia: materiaId,
                 fecha,
                 horaInicio,
                 horaFin,
                 cupos
             };
-            
             await APIClient.crearTutoria(tutoriaData);
-            
             mostrarMensaje(mensajeDiv, 'Tutoría registrada exitosamente', 'exito');
             form.reset();
             await cargarTutoriasCreadas(sesion);
@@ -176,19 +173,22 @@ async function cargarTutoriasCreadas(sesion) {
             const solicitudesResponse = await APIClient.getSolicitudesTutoria(tutoria._id);
             const todasSolicitudes = solicitudesResponse.solicitudes;
             const cuposAceptados = todasSolicitudes.filter(s => s.estado === 'Aceptada').length;
-            
+
             // Calcular promedio de calificación
             const promedioResponse = await APIClient.getPromedioTutoria(tutoria._id);
             const promedioCalificacion = promedioResponse.promedio || 0;
-            
+
             // Determinar estado de publicación
             const estadoPublicacion = tutoria.publicada ? 'Publicada' : 'No Publicada';
             const estadoClass = tutoria.publicada ? 'text-green-700' : 'text-gray-500';
-            
+
+            // Mostrar el nombre legible de la materia
+            const materiaNombre = tutoria.materiaNombre || tutoria.materia?.nombre || '[Sin materia]';
+
             html += `
                 <tr class="border-b hover:bg-gray-50">
                     <td class="px-2 py-2 text-xs text-gray-700 truncate">${tutoria._id.substring(0, 7)}</td>
-                    <td class="px-2 py-2 text-xs text-gray-700 truncate">${tutoria.materiaNombre || tutoria.materia}</td>
+                    <td class="px-2 py-2 text-xs text-gray-700 truncate">${materiaNombre}</td>
                     <td class="px-2 py-2 text-xs text-gray-700 whitespace-nowrap">${formatearFecha(tutoria.fecha)}</td>
                     <td class="px-2 py-2 text-xs ${estadoClass} font-medium whitespace-nowrap">${estadoPublicacion}</td>
                     <td class="px-2 py-2 text-xs text-gray-700 text-center">${tutoria.cuposOriginales}</td>
@@ -208,7 +208,7 @@ async function cargarTutoriasCreadas(sesion) {
                         <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs font-medium transition btn-editar-tutoria whitespace-nowrap w-full" 
                                 data-tutoria-id="${tutoria._id}" 
                                 data-materia="${tutoria.materia._id || tutoria.materia}" 
-                                data-materia-nombre="${tutoria.materiaNombre || tutoria.materia}" 
+                                data-materia-nombre="${tutoria.materia.nombre || tutoria.materiaNombre || tutoria.materia}" 
                                 data-fecha="${tutoria.fecha}" 
                                 data-hora-inicio="${tutoria.horaInicio}" 
                                 data-hora-fin="${tutoria.horaFin}" 
@@ -220,7 +220,7 @@ async function cargarTutoriasCreadas(sesion) {
                     <td class="px-2 py-2 text-center">
                         <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition btn-ver-respuestas whitespace-nowrap w-full" 
                                 data-tutoria-id="${tutoria._id}" 
-                                data-materia="${tutoria.materiaNombre || tutoria.materia}">
+                                data-materia="${tutoria.materia}">
                             Ver Respuestas
                         </button>
                     </td>
@@ -295,10 +295,17 @@ async function cargarTodasSolicitudes(tutorias) {
         `;
         
         solicitudesFiltradas.forEach(solicitud => {
+            // Si tutoriaMateria es un objeto, mostrar su nombre, si no, mostrar el valor directo
+            let materiaNombre = '';
+            if (solicitud.tutoriaMateria && typeof solicitud.tutoriaMateria === 'object') {
+                materiaNombre = solicitud.tutoriaMateria.nombre || '[Sin materia]';
+            } else {
+                materiaNombre = solicitud.tutoriaMateria || '[Sin materia]';
+            }
             html += `
                 <tr class="border-b hover:bg-gray-50">
                     <td class="px-2 py-2 text-xs text-gray-700">${solicitud._id.substring(0, 6)}...</td>
-                    <td class="px-2 py-2 text-xs text-gray-700">${solicitud.tutoriaMateria}</td>
+                    <td class="px-2 py-2 text-xs text-gray-700">${materiaNombre}</td>
                     <td class="px-2 py-2 text-xs text-gray-700">${solicitud.estudianteNombre}</td>
                     <td class="px-2 py-2 text-center">
                         <span class="text-xs text-gray-700">${solicitud.estado}</span>
@@ -585,12 +592,13 @@ function agregarEventListenersEditarEliminar() {
         btn.addEventListener('click', function() {
             const tutoriaId = this.dataset.tutoriaId;
             const materia = this.dataset.materia;
+            const materiaNombre = this.dataset.materiaNombre;
             const fecha = this.dataset.fecha;
             const horaInicio = this.dataset.horaInicio;
             const horaFin = this.dataset.horaFin;
             const cupos = this.dataset.cupos;
             
-            mostrarModalEditarTutoria(tutoriaId, materia, fecha, horaInicio, horaFin, cupos);
+            mostrarModalEditarTutoria(tutoriaId, materia, fecha, horaInicio, horaFin, cupos, materiaNombre);
         });
     });
 
@@ -607,17 +615,24 @@ function agregarEventListenersEditarEliminar() {
 
 function mostrarModalEditarTutoria(tutoriaId, materia, fecha, horaInicio, horaFin, cupos) {
     document.getElementById('editar-tutoria-id').value = tutoriaId;
-    document.getElementById('editar-materia').value = materia;
-    
+    // materia es el ID, materiaNombre es el nombre
+    const materiaInput = document.getElementById('editar-materia');
+    const materiaNombre = arguments.length > 6 ? arguments[6] : (arguments.length > 5 ? arguments[5] : '');
+    if (materiaInput) {
+        materiaInput.value = materiaNombre || materia; // Mostrar el nombre si está disponible
+    }
+    // Si existe un campo oculto para el ID, lo llenamos también
+    const materiaIdInput = document.getElementById('editar-materia-id');
+    if (materiaIdInput) {
+        materiaIdInput.value = materia;
+    }
     // Formatear fecha para input type="date" (YYYY-MM-DD)
     const fechaObj = new Date(fecha);
     const fechaFormateada = fechaObj.toISOString().split('T')[0];
     document.getElementById('editar-fecha').value = fechaFormateada;
-    
     document.getElementById('editar-hora-inicio').value = horaInicio;
     document.getElementById('editar-hora-fin').value = horaFin;
     document.getElementById('editar-cupos').value = cupos;
-    
     const modal = document.getElementById('modal-editar-tutoria');
     modal.classList.remove('hidden');
 }

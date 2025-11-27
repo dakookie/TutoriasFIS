@@ -4,15 +4,23 @@ require('dotenv').config();
 
 const Usuario = require('../models/Usuario');
 const Pregunta = require('../models/Pregunta');
+const Materia = require('../models/Materia');
 
 const materias = [
-    "Álgebra Lineal", "Cálculo en una Variable", "Programación I",
-    "Ecuaciones Diferenciales Ordinarias", "Programación II",
-    "Estructura de Datos y Algoritmos I", "Fundamentos de Bases de Datos",
-    "Ingeniería de Software y Requerimientos", "Diseño de Software",
-    "Bases de Datos Distribuidas", "Aplicaciones Web",
-    "Metodologías Ágiles", "Aplicaciones Web Avanzadas",
-    "Gestión de Proyectos de Software"
+    { nombre: "Álgebra Lineal", codigo: "MAT101", semestre: 1 },
+    { nombre: "Cálculo en una Variable", codigo: "MAT102", semestre: 1 },
+    { nombre: "Programación I", codigo: "INF101", semestre: 1 },
+    { nombre: "Ecuaciones Diferenciales Ordinarias", codigo: "MAT201", semestre: 2 },
+    { nombre: "Programación II", codigo: "INF102", semestre: 2 },
+    { nombre: "Estructura de Datos y Algoritmos I", codigo: "INF201", semestre: 2 },
+    { nombre: "Fundamentos de Bases de Datos", codigo: "INF202", semestre: 3 },
+    { nombre: "Ingeniería de Software y Requerimientos", codigo: "INF301", semestre: 3 },
+    { nombre: "Diseño de Software", codigo: "INF302", semestre: 4 },
+    { nombre: "Bases de Datos Distribuidas", codigo: "INF401", semestre: 4 },
+    { nombre: "Aplicaciones Web", codigo: "INF402", semestre: 5 },
+    { nombre: "Metodologías Ágiles", codigo: "INF403", semestre: 5 },
+    { nombre: "Aplicaciones Web Avanzadas", codigo: "INF404", semestre: 6 },
+    { nombre: "Gestión de Proyectos de Software", codigo: "INF405", semestre: 6 }
 ];
 
 const seedData = async () => {
@@ -24,7 +32,11 @@ const seedData = async () => {
         // Limpiar colecciones
         await Usuario.deleteMany({});
         await Pregunta.deleteMany({});
+        await Materia.deleteMany({});
         console.log('🗑️  Colecciones limpiadas');
+    // Insertar materias
+    await Materia.insertMany(materias);
+    console.log('✅ Materias insertadas');
 
         // Crear administrador
         const admin = new Usuario({
@@ -123,11 +135,14 @@ const seedData = async () => {
             'Metodologías Ágiles', 'Diseño de Software'
         ];
 
-        for (const materia of materiasConEncuestas) {
+        // Buscar los ObjectId de las materias por nombre
+        const materiasDocs = await Materia.find({ nombre: { $in: materiasConEncuestas } });
+        for (const materiaDoc of materiasDocs) {
             for (const preguntaTexto of preguntasGenericas) {
                 const pregunta = new Pregunta({
                     pregunta: preguntaTexto,
-                    materia: materia
+                    materia: materiaDoc._id,
+                    materiaNombre: materiaDoc.nombre
                 });
                 await pregunta.save();
             }

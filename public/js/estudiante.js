@@ -16,18 +16,27 @@ async function inicializarFiltroMaterias() {
         const tutorias = response.tutorias;
         const materiasUnicas = new Set();
         
-        tutorias.forEach(t => materiasUnicas.add(t.materia));
+        tutorias.forEach(t => {
+            if (t.materia && typeof t.materia === 'object' && t.materia.nombre) {
+                materiasUnicas.add(t.materia.nombre);
+            } else {
+                materiasUnicas.add(t.materia);
+            }
+        });
         
         // Limpiar y agregar opción "Todas"
         filtroSelect.innerHTML = '<option value="Todas">Todas</option>';
         
         // Agregar materias únicas
-        Array.from(materiasUnicas).sort().forEach(materia => {
+        Array.from(materiasUnicas).sort().forEach(nombreMateria => {
             const option = document.createElement('option');
-            option.value = materia;
-            option.textContent = materia;
+            option.value = nombreMateria;
+            option.textContent = nombreMateria;
             filtroSelect.appendChild(option);
         });
+
+        // Restaurar el valor del filtro actual
+        filtroSelect.value = filtroMateriaActual;
 
         // Event listener para el cambio de filtro
         filtroSelect.addEventListener('change', async function() {
@@ -39,13 +48,18 @@ async function inicializarFiltroMaterias() {
     }
 }
 
+let filtroInicializado = false;
+
 // Cargar y mostrar tutorías disponibles
 async function cargarTutoriasDisponibles() {
     const container = document.getElementById('tutorias-disponibles-lista');
     const sesion = await obtenerSesion();
     
-    // Inicializar filtro si existe
-    await inicializarFiltroMaterias();
+    // Inicializar filtro solo la primera vez
+    if (!filtroInicializado) {
+        await inicializarFiltroMaterias();
+        filtroInicializado = true;
+    }
     
     try {
         console.log('Llamando a getTutoriasDisponibles...');
@@ -58,7 +72,12 @@ async function cargarTutoriasDisponibles() {
         
         // Aplicar filtro por materia
         if (filtroMateriaActual && filtroMateriaActual !== 'Todas') {
-            tutorias = tutorias.filter(t => t.materia === filtroMateriaActual);
+            tutorias = tutorias.filter(t => {
+                if (t.materia && typeof t.materia === 'object' && t.materia.nombre) {
+                    return t.materia.nombre === filtroMateriaActual;
+                }
+                return t.materia === filtroMateriaActual;
+            });
         }
 
         if (tutorias.length === 0) {
@@ -82,9 +101,17 @@ async function cargarTutoriasDisponibles() {
                 return tutoriaIdSolicitud.toString() === tutoria._id.toString();
             }) : null;
 
+            // Mostrar el nombre de la materia correctamente
+            let nombreMateria = '';
+            if (tutoria.materia && typeof tutoria.materia === 'object' && tutoria.materia.nombre) {
+                nombreMateria = tutoria.materia.nombre;
+            } else {
+                nombreMateria = tutoria.materia;
+            }
+
             html += `
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-sm text-gray-700">${tutoria.materiaNombre || tutoria.materia}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">${nombreMateria}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">${formatearFecha(tutoria.fecha)}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">${tutoria.horaInicio}</td>
                     <td class="px-6 py-4 text-sm text-gray-700">${tutoria.horaFin}</td>
@@ -110,6 +137,37 @@ async function cargarTutoriasDisponibles() {
 
         // Agregar event listeners para los botones de solicitar
         agregarEventListenersSolicitar();
+
+// Modal de mensaje reutilizable (definición global)
+function mostrarModalMensaje(mensaje, tipo = 'info') {
+    let modal = document.getElementById('modal-mensaje');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-mensaje';
+        modal.className = 'fixed inset-0 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-lg p-8 text-center max-w-sm w-full">
+                <div id="modal-mensaje-texto" class="mb-4 text-lg font-medium"></div>
+                <button id="btn-cerrar-modal-mensaje" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">Aceptar</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    const texto = modal.querySelector('#modal-mensaje-texto');
+    texto.textContent = mensaje;
+    texto.className = 'mb-4 text-lg font-medium';
+    if (tipo === 'success') texto.classList.add('text-green-600');
+    else if (tipo === 'error') texto.classList.add('text-red-600');
+    else texto.classList.add('text-gray-700');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    // Cerrar modal
+    const btnCerrar = modal.querySelector('#btn-cerrar-modal-mensaje');
+    btnCerrar.onclick = function() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    };
+}
         
     } catch (error) {
         console.error('Error al cargar tutorías disponibles:', error);
@@ -124,19 +182,49 @@ function agregarEventListenersSolicitar() {
             const sesion = await obtenerSesion();
             
             if (!sesion) {
-                mostrarNotificacion('Advertencia', 'Debes iniciar sesión para solicitar una tutoría', 'warning');
+                mostrarModalMensaje('Debes iniciar sesión para solicitar una tutoría', 'error');
                 return;
             }
-            
+
             try {
                 const response = await APIClient.crearSolicitud(tutoriaId);
-                mostrarNotificacion('Éxito', 'Solicitud enviada exitosamente', 'success');
+                mostrarModalMensaje('Solicitud enviada exitosamente', 'success');
                 await cargarTutoriasDisponibles();
                 await cargarSolicitudesEstudiante(sesion);
             } catch (error) {
                 console.error('Error al crear solicitud:', error);
-                mostrarNotificacion('Error', error.message || 'Error al enviar la solicitud', 'error');
+                mostrarModalMensaje(error.message || 'Error al enviar la solicitud', 'error');
             }
+        // Modal de mensaje reutilizable
+        function mostrarModalMensaje(mensaje, tipo = 'info') {
+            let modal = document.getElementById('modal-mensaje');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'modal-mensaje';
+                modal.className = 'fixed inset-0 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-lg p-8 text-center max-w-sm w-full">
+                        <div id="modal-mensaje-texto" class="mb-4 text-lg font-medium"></div>
+                        <button id="btn-cerrar-modal-mensaje" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">Aceptar</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            const texto = modal.querySelector('#modal-mensaje-texto');
+            texto.textContent = mensaje;
+            texto.className = 'mb-4 text-lg font-medium';
+            if (tipo === 'success') texto.classList.add('text-green-600');
+            else if (tipo === 'error') texto.classList.add('text-red-600');
+            else texto.classList.add('text-gray-700');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Cerrar modal
+            const btnCerrar = modal.querySelector('#btn-cerrar-modal-mensaje');
+            btnCerrar.onclick = function() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+        }
         });
     });
 }
@@ -245,10 +333,10 @@ function agregarEventListenersEliminar() {
                     // Primero recargar solicitudes, luego tutorías
                     await cargarSolicitudesEstudiante(sesion);
                     await cargarTutoriasDisponibles();
-                    mostrarNotificacion('Éxito', 'Solicitud cancelada exitosamente', 'success');
+                    alert('Solicitud cancelada exitosamente');
                 } catch (error) {
                     console.error('Error al eliminar solicitud:', error);
-                    mostrarNotificacion('Error', 'Error al eliminar la solicitud: ' + error.message, 'error');
+                    alert('Error al eliminar la solicitud: ' + error.message);
                 }
             }
         });
@@ -273,7 +361,7 @@ async function abrirModalEncuesta(tutoriaId, materia) {
         const preguntas = response.preguntas;
         
         if (preguntas.length === 0) {
-            mostrarNotificacion('Información', 'No hay preguntas configuradas para esta materia. Por favor, contacta al administrador.', 'info');
+            alert('No hay preguntas configuradas para esta materia. Por favor, contacta al administrador.');
             return;
         }
     
@@ -341,7 +429,7 @@ async function abrirModalEncuesta(tutoriaId, materia) {
         
     } catch (error) {
         console.error('Error al abrir modal de encuesta:', error);
-        mostrarNotificacion('Error', 'Error al cargar el formulario: ' + error.message, 'error');
+        alert('Error al cargar el formulario: ' + error.message);
     }
 }
 
@@ -372,7 +460,7 @@ async function enviarEncuesta(tutoriaId, preguntas, estudianteId) {
         // Guardar respuestas
         await APIClient.enviarRespuestas(tutoriaId, respuestas);
         
-        mostrarNotificacion('Éxito', '¡Gracias por tu calificación! Tu opinión es muy importante.', 'success');
+        alert('¡Gracias por tu calificación! Tu opinión es muy importante.');
         cerrarModalEncuesta();
         await cargarSolicitudesEstudiante();
     } catch (error) {
@@ -411,66 +499,4 @@ function formatearFecha(fecha) {
     
     return fecha;
 }
-
-// Funciones para el modal de notificación
-function mostrarNotificacion(titulo, mensaje, tipo = 'info') {
-    const modal = document.getElementById('modal-notificacion');
-    const tituloElement = document.getElementById('titulo-notificacion');
-    const mensajeElement = document.getElementById('mensaje-notificacion');
-    const iconoElement = document.getElementById('icono-notificacion');
-    
-    tituloElement.textContent = titulo;
-    mensajeElement.textContent = mensaje;
-    
-    // Configurar icono según el tipo
-    let iconoHTML = '';
-    if (tipo === 'success') {
-        iconoHTML = `
-            <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-        `;
-    } else if (tipo === 'error') {
-        iconoHTML = `
-            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-        `;
-    } else if (tipo === 'warning') {
-        iconoHTML = `
-            <svg class="w-12 h-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-        `;
-    } else {
-        iconoHTML = `
-            <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-        `;
-    }
-    
-    iconoElement.innerHTML = iconoHTML;
-    modal.classList.remove('hidden');
-}
-
-function cerrarModalNotificacion() {
-    const modal = document.getElementById('modal-notificacion');
-    modal.classList.add('hidden');
-}
-
-// Event listener para cerrar modal con ESC
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' || e.key === 'Esc') {
-        const modalNotificacion = document.getElementById('modal-notificacion');
-        if (modalNotificacion && !modalNotificacion.classList.contains('hidden')) {
-            cerrarModalNotificacion();
-        }
-        
-        const modalEncuesta = document.getElementById('modal-encuesta');
-        if (modalEncuesta && modalEncuesta.classList.contains('flex')) {
-            cerrarModalEncuesta();
-        }
-    }
-});
 

@@ -5,6 +5,9 @@ let receptorActual = null;
 let escribiendoTimeout = null;
 let chatSocket = null;
 
+// Variable global para almacenar el usuario actual
+let usuarioActual = null;
+
 document.addEventListener('DOMContentLoaded', async function() {
     // Obtener sesión del usuario
     const usuario = await obtenerSesion();
@@ -14,14 +17,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
     
-    // Guardar en localStorage para acceso sincrónico
-    localStorage.setItem('usuario', JSON.stringify({
-        id: usuario.userId,
-        nombre: usuario.nombre,
-        apellido: usuario.apellido,
-        rol: usuario.rol,
-        email: usuario.email
-    }));
+    // Guardar usuario globalmente
+    usuarioActual = usuario;
 
     // Inicializar Socket.IO para chat
     chatSocket = io({
@@ -53,6 +50,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('chat-activo').classList.remove('flex');
         document.getElementById('sin-seleccion').classList.remove('hidden');
         document.getElementById('sin-seleccion').classList.add('flex');
+    });
+
+    // Configurar botón cerrar sesión
+    document.getElementById('btn-cerrar-sesion').addEventListener('click', async function() {
+        try {
+            await cerrarSesion();
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+            window.location.href = '/';
+        }
     });
 });
 
@@ -152,10 +159,9 @@ async function seleccionarConversacion(conv) {
         conversacionActual = conv.tutoria._id;
 
         // Determinar receptor (tutor o estudiante)
-        const usuario = obtenerUsuarioActualSync();
         const estudiantes = conv.estudiantes || [];
         
-        if (usuario.rol === 'Tutor') {
+        if (usuarioActual.rol === 'Tutor') {
             // El tutor puede enviar a todos los estudiantes
             // Por simplicidad, tomamos el primer estudiante como receptor principal
             // En un chat grupal real, los mensajes se enviarían a todos
@@ -174,7 +180,7 @@ async function seleccionarConversacion(conv) {
         const totalParticipantes = estudiantes.length + 1;
         let infoParticipantes = '';
         
-        if (usuario.rol === 'Tutor') {
+        if (usuarioActual.rol === 'Tutor') {
             const nombresEstudiantes = estudiantes.map(e => `${e.nombre} ${e.apellido}`).join(', ');
             infoParticipantes = nombresEstudiantes || 'Sin estudiantes aún';
         } else {
@@ -261,9 +267,13 @@ function agregarMensajeUI(mensaje, esPropio = null) {
         sinMensajes.remove();
     }
 
-    const usuario = obtenerUsuarioActualSync();
     if (esPropio === null) {
-        esPropio = mensaje.emisor === usuario.id;
+        // Convertir ambos valores a string para comparación correcta
+        const emisorId = typeof mensaje.emisor === 'object' ? mensaje.emisor.toString() : String(mensaje.emisor);
+        // El servidor devuelve _id, no userId
+        const usuarioId = String(usuarioActual._id || usuarioActual.userId);
+        
+        esPropio = emisorId === usuarioId;
     }
 
     const div = document.createElement('div');
@@ -431,13 +441,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function obtenerUsuarioActualSync() {
-    const usuarioStr = localStorage.getItem('usuario');
-    return usuarioStr ? JSON.parse(usuarioStr) : null;
-}
-
 async function obtenerUsuarioActual() {
-    return obtenerUsuarioActualSync();
+    return usuarioActual;
 }
 
 async function obtenerEstudianteTutoria(tutoriaId) {
@@ -447,10 +452,9 @@ async function obtenerEstudianteTutoria(tutoriaId) {
 }
 
 function getRolHomePage() {
-    const usuario = obtenerUsuarioActualSync();
-    if (!usuario) return '/';
+    if (!usuarioActual) return '/';
     
-    switch(usuario.rol) {
+    switch(usuarioActual.rol) {
         case 'Tutor': return '/tutor';
         case 'Estudiante': return '/estudiante';
         case 'Administrador': return '/admin';

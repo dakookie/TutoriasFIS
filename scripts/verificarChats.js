@@ -21,8 +21,8 @@ async function verificarChats() {
         console.log('\n📚 TUTORÍAS REGISTRADAS:', tutorias.length);
         tutorias.forEach((t, i) => {
             console.log(`\n${i + 1}. ID: ${t._id}`);
-            console.log(`   Materia: ${t.materia}`);
-            console.log(`   Tutor: ${t.tutor.nombre} ${t.tutor.apellido}`);
+            console.log(`   Materia: ${t.materiaNombre || t.materia}`);
+            console.log(`   Tutor: ${t.tutor ? `${t.tutor.nombre} ${t.tutor.apellido}` : 'Tutor no encontrado'}`);
             console.log(`   Fecha: ${new Date(t.fecha).toLocaleDateString()}`);
             console.log(`   Cupos: ${t.cuposDisponibles}/${t.cuposOriginales || t.cuposDisponibles}`);
         });
@@ -35,8 +35,10 @@ async function verificarChats() {
 
         console.log('\n\n✅ SOLICITUDES ACEPTADAS:', solicitudesAceptadas.length);
         solicitudesAceptadas.forEach((s, i) => {
-            console.log(`\n${i + 1}. Estudiante: ${s.estudiante.nombre} ${s.estudiante.apellido}`);
-            console.log(`   Tutoría: ${s.tutoria.materia}`);
+            const estudiante = s.estudiante ? `${s.estudiante.nombre} ${s.estudiante.apellido}` : 'Estudiante no encontrado';
+            const tutoria = s.tutoria ? (s.tutoria.materiaNombre || s.tutoria.materia) : 'Tutoría no encontrada';
+            console.log(`\n${i + 1}. Estudiante: ${estudiante}`);
+            console.log(`   Tutoría: ${tutoria}`);
             console.log(`   Estado: ${s.estado}`);
         });
 
@@ -56,11 +58,14 @@ async function verificarChats() {
         });
 
         Object.values(tutoriasConEstudiantes).forEach((data, i) => {
-            console.log(`\n${i + 1}. ${data.tutoria.materia} (${new Date(data.tutoria.fecha).toLocaleDateString()})`);
+            const materiaNombre = data.tutoria.materiaNombre || data.tutoria.materia;
+            console.log(`\n${i + 1}. ${materiaNombre} (${new Date(data.tutoria.fecha).toLocaleDateString()})`);
             console.log(`   Tutor ID: ${data.tutoria.tutor}`);
             console.log(`   Estudiantes inscritos: ${data.estudiantes.length}`);
             data.estudiantes.forEach((est, j) => {
-                console.log(`     ${j + 1}. ${est.nombre} ${est.apellido} (ID: ${est._id})`);
+                if (est) {
+                    console.log(`     ${j + 1}. ${est.nombre} ${est.apellido} (ID: ${est._id})`);
+                }
             });
         });
 

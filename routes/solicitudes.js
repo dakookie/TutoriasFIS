@@ -56,7 +56,8 @@ router.post('/', requireRole('Estudiante'), async (req, res) => {
         // Notificar via Socket.IO al tutor
         req.app.get('io').to(`tutor-${tutoria.tutor}`).emit('nuevaSolicitud', {
             solicitud,
-            tutoria: tutoria.materia
+            tutoria: tutoria.materiaNombre,
+            tutoriaId: tutoria._id
         });
 
         res.status(201).json({
@@ -174,7 +175,7 @@ router.put('/:id/aceptar', requireRole('Tutor'), async (req, res) => {
         // Notificar via Socket.IO al estudiante
         req.app.get('io').to(`estudiante-${solicitud.estudiante}`).emit('solicitudAceptada', {
             solicitudId: solicitud._id,
-            tutoria: tutoria.materia
+            tutoria: tutoria.materiaNombre
         });
 
         res.json({
@@ -230,7 +231,7 @@ router.put('/:id/rechazar', requireRole('Tutor'), async (req, res) => {
         // Notificar via Socket.IO al estudiante
         req.app.get('io').to(`estudiante-${solicitud.estudiante}`).emit('solicitudRechazada', {
             solicitudId: solicitud._id,
-            tutoria: tutoria.materia
+            tutoria: tutoria.materiaNombre
         });
 
         res.json({
