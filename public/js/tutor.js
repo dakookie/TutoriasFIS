@@ -268,7 +268,7 @@ async function cargarTutoriasCreadas(sesion) {
                     <td class="px-2 py-2 text-center">
                         <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition btn-ver-respuestas whitespace-nowrap w-full" 
                                 data-tutoria-id="${tutoria._id}" 
-                                data-materia="${tutoria.materia}">
+                                data-materia="${tutoria.materiaNombre}">
                             Ver Respuestas
                         </button>
                     </td>
@@ -488,9 +488,10 @@ function agregarEventListenersGestionSolicitudes() {
 function agregarEventListenersVerRespuestas() {
     document.querySelectorAll('.btn-ver-respuestas').forEach(btn => {
         btn.addEventListener('click', function() {
-            const tutoriaId = parseInt(this.dataset.tutoriaId);
+            const tutoriaId = this.dataset.tutoriaId;
             const materia = this.dataset.materia;
-            mostrarModalRespuestas(tutoriaId, materia);
+            // Redirigir a la página de respuestas
+            window.location.href = `/respuestas.html?tutoriaId=${tutoriaId}&materia=${encodeURIComponent(materia)}`;
         });
     });
 }

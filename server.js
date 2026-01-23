@@ -68,6 +68,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// Alias para login
+app.get('/login', (req, res) => {
+    res.redirect('/');
+});
+
 // Ruta para admin
 app.get('/admin', (req, res) => {
     const token = req.cookies.token;

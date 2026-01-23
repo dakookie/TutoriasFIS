@@ -63,11 +63,11 @@ router.get('/preguntas', requireRole('Administrador'), async (req, res) => {
     }
 });
 
-// GET /api/encuestas/preguntas/materia/:materia - Obtener preguntas por materia
+// GET /api/encuestas/preguntas/materia/:materia - Obtener preguntas por materia (búsqueda por nombre)
 router.get('/preguntas/materia/:materia', requireAuth, async (req, res) => {
     try {
         const preguntas = await Pregunta.find({
-            materia: req.params.materia,
+            materiaNombre: req.params.materia,
             activa: true
         }).sort({ createdAt: 1 });
 
@@ -133,6 +133,9 @@ router.post('/respuestas', requireRole('Estudiante'), async (req, res) => {
         });
 
     } catch (error) {
+        console.error('Error al guardar respuestas:', error);
+        console.error('Stack trace:', error.stack);
+        console.error('Request body:', req.body);
         res.status(500).json({
             success: false,
             message: 'Error al guardar respuestas',

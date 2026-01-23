@@ -5,6 +5,51 @@
 
 let filtroMateriaActual = 'Todas';
 
+// Función para mostrar mensajes toast
+function mostrarToast(mensaje, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    const iconos = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+    const colores = {
+        success: 'bg-green-50 border-green-500 text-green-800',
+        error: 'bg-red-50 border-red-500 text-red-800',
+        warning: 'bg-yellow-50 border-yellow-500 text-yellow-800',
+        info: 'bg-blue-50 border-blue-500 text-blue-800'
+    };
+
+    toast.className = `${colores[tipo]} border-l-4 p-4 rounded-lg shadow-lg max-w-md flex items-start transform transition-all duration-300 ease-in-out`;
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    
+    toast.innerHTML = `
+        <span class="mr-3 text-lg font-bold">${iconos[tipo]}</span>
+        <div class="flex-1">${mensaje}</div>
+        <button onclick="this.parentElement.remove()" class="ml-3 text-lg font-bold hover:opacity-70">&times;</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Animación de entrada
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
 // Funciones para cambiar de vista
 function mostrarVistaTutorias() {
     document.getElementById('vista-tutorias').classList.remove('hidden');
@@ -337,10 +382,10 @@ function agregarEventListenersEliminar() {
                     // Primero recargar solicitudes, luego tutorías
                     await cargarSolicitudesEstudiante(sesion);
                     await cargarTutoriasDisponibles();
-                    alert('Solicitud cancelada exitosamente');
+                    mostrarToast('Solicitud cancelada exitosamente', 'success');
                 } catch (error) {
                     console.error('Error al eliminar solicitud:', error);
-                    alert('Error al eliminar la solicitud: ' + error.message);
+                    mostrarToast('Error al eliminar la solicitud: ' + error.message, 'error');
                 }
             }
         });
@@ -351,7 +396,7 @@ function agregarEventListenersEliminar() {
 function agregarEventListenersCalificar() {
     document.querySelectorAll('.btn-calificar-tutoria').forEach(btn => {
         btn.addEventListener('click', function() {
-            const tutoriaId = parseInt(this.dataset.tutoriaId);
+            const tutoriaId = this.dataset.tutoriaId;  // No usar parseInt, es un ObjectId de MongoDB
             const materia = this.dataset.materia;
             abrirModalEncuesta(tutoriaId, materia);
         });
@@ -365,7 +410,7 @@ async function abrirModalEncuesta(tutoriaId, materia) {
         const preguntas = response.preguntas;
         
         if (preguntas.length === 0) {
-            alert('No hay preguntas configuradas para esta materia. Por favor, contacta al administrador.');
+            mostrarToast('No hay preguntas configuradas para esta materia. Por favor, contacta al administrador.', 'warning');
             return;
         }
     
@@ -458,7 +503,7 @@ async function abrirModalEncuesta(tutoriaId, materia) {
         
     } catch (error) {
         console.error('Error al abrir modal de encuesta:', error);
-        alert('Error al cargar el formulario: ' + error.message);
+        mostrarToast('Error al cargar el formulario: ' + error.message, 'error');
     }
 }
 
@@ -489,8 +534,8 @@ async function enviarEncuesta(tutoriaId, preguntas, estudianteId) {
         // Guardar respuestas
         await APIClient.enviarRespuestas(tutoriaId, respuestas);
         
-        alert('¡Gracias por tu calificación! Tu opinión es muy importante.');
         cerrarModalEncuesta();
+        mostrarToast('¡Gracias por tu calificación! Tu opinión es muy importante para mejorar nuestras tutorías.', 'success');
         await cargarSolicitudesEstudiante();
     } catch (error) {
         console.error('Error al enviar encuesta:', error);
