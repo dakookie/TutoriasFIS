@@ -280,4 +280,45 @@ router.get('/disponibles', requireAuth, async (req, res) => {
     }
 });
 
+// PATCH /api/tutorias/:id/publicar - Publicar/Despublicar tutoría
+router.patch('/:id/publicar', requireRole('Tutor'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const tutoria = await Tutoria.findById(id);
+        
+        if (!tutoria) {
+            return res.status(404).json({
+                success: false,
+                message: 'Tutoría no encontrada'
+            });
+        }
+
+        // Verificar que el tutor sea el dueño
+        if (tutoria.tutor.toString() !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes permiso para publicar esta tutoría'
+            });
+        }
+
+        // Cambiar estado de publicación
+        tutoria.publicada = !tutoria.publicada;
+        await tutoria.save();
+
+        res.json({
+            success: true,
+            message: tutoria.publicada ? 'Tutoría publicada exitosamente' : 'Tutoría despublicada exitosamente',
+            tutoria
+        });
+    } catch (error) {
+        console.error('Error al publicar tutoría:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cambiar estado de publicación',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

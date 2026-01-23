@@ -138,6 +138,12 @@ class APIClient {
         });
     }
 
+    static async publicarTutoria(tutoriaId) {
+        return this.request(`/api/tutorias/${tutoriaId}/publicar`, {
+            method: 'PATCH'
+        });
+    }
+
     // Solicitudes endpoints
     static async crearSolicitud(tutoriaId) {
         return this.request('/api/solicitudes', {

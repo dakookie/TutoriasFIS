@@ -11,29 +11,21 @@ async function inicializarFiltroMaterias() {
     if (!filtroSelect) return;
 
     try {
-        // Obtener todas las materias únicas de las tutorías
-        const response = await APIClient.getTutoriasDisponibles();
-        const tutorias = response.tutorias;
-        const materiasUnicas = new Set();
-        
-        tutorias.forEach(t => {
-            if (t.materia && typeof t.materia === 'object' && t.materia.nombre) {
-                materiasUnicas.add(t.materia.nombre);
-            } else {
-                materiasUnicas.add(t.materia);
-            }
-        });
+        // Obtener todas las materias de la base de datos
+        const materias = await APIClient.obtenerMaterias();
         
         // Limpiar y agregar opción "Todas"
         filtroSelect.innerHTML = '<option value="Todas">Todas</option>';
         
-        // Agregar materias únicas
-        Array.from(materiasUnicas).sort().forEach(nombreMateria => {
-            const option = document.createElement('option');
-            option.value = nombreMateria;
-            option.textContent = nombreMateria;
-            filtroSelect.appendChild(option);
-        });
+        // Agregar todas las materias ordenadas
+        materias
+            .sort((a, b) => a.nombre.localeCompare(b.nombre))
+            .forEach(materia => {
+                const option = document.createElement('option');
+                option.value = materia.nombre;
+                option.textContent = materia.nombre;
+                filtroSelect.appendChild(option);
+            });
 
         // Restaurar el valor del filtro actual
         filtroSelect.value = filtroMateriaActual;

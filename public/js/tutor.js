@@ -246,8 +246,10 @@ async function cargarTutoriasCreadas(sesion) {
                         </a>
                     </td>
                     <td class="px-2 py-2 text-center">
-                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition whitespace-nowrap w-full">
-                            Publicar
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition btn-publicar-tutoria whitespace-nowrap w-full" 
+                                data-tutoria-id="${tutoria._id}"
+                                data-publicada="${tutoria.publicada}">
+                            ${tutoria.publicada ? 'Despublicar' : 'Publicar'}
                         </button>
                     </td>
                     <td class="px-2 py-2 text-center">
@@ -633,6 +635,29 @@ function mostrarMensaje(elemento, mensaje, tipo) {
 let tutoriaIdAEliminar = null;
 
 function agregarEventListenersEditarEliminar() {
+    // Botones de publicar
+    document.querySelectorAll('.btn-publicar-tutoria').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const tutoriaId = this.dataset.tutoriaId;
+            try {
+                const response = await APIClient.publicarTutoria(tutoriaId);
+                if (response.success) {
+                    // Recargar la lista de tutorías
+                    await cargarTutoriasCreadas();
+                    mostrarMensaje(document.getElementById('mensaje-registro') || document.createElement('div'), 
+                        response.message, 'exito');
+                } else {
+                    mostrarMensaje(document.getElementById('mensaje-registro') || document.createElement('div'), 
+                        response.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error al publicar tutoría:', error);
+                mostrarMensaje(document.getElementById('mensaje-registro') || document.createElement('div'), 
+                    'Error al cambiar estado de publicación', 'error');
+            }
+        });
+    });
+
     // Botones de editar
     document.querySelectorAll('.btn-editar-tutoria').forEach(btn => {
         btn.addEventListener('click', function() {

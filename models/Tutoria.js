@@ -45,6 +45,10 @@ const tutoriaSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    publicada: {
+        type: Boolean,
+        default: false
+    },
     // Configuración del aula
     modalidadAula: {
         type: String,
