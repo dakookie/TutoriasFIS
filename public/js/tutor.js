@@ -40,8 +40,25 @@ function inicializarFormularioTutoria(sesion) {
         materiaSelect.innerHTML = '<option value="">Selecciona una materia</option>';
         try {
             // Obtener todas las materias activas desde la colección
-            const materias = await APIClient.obtenerMaterias();
-            materias.forEach(materia => {
+            const materiasDB = await APIClient.obtenerMaterias();
+            
+            // Obtener la sesión del usuario para filtrar sus materias
+            const sesionResponse = await APIClient.getSession();
+            const materiasTutor = sesionResponse.usuario.materias || [];
+            
+            // Filtrar materias que el tutor seleccionó durante el registro
+            const materiasSeleccionadas = materiasDB.filter(materia => 
+                materiasTutor.some(m => 
+                    (m._id && m._id === materia._id) || (typeof m === 'string' && m === materia._id)
+                )
+            );
+            
+            if (materiasSeleccionadas.length === 0) {
+                materiaSelect.innerHTML += '<option value="" disabled>No tienes materias asignadas</option>';
+                return;
+            }
+            
+            materiasSeleccionadas.forEach(materia => {
                 const option = document.createElement('option');
                 option.value = materia._id;
                 option.textContent = materia.nombre;
@@ -53,6 +70,36 @@ function inicializarFormularioTutoria(sesion) {
         }
     }
     cargarMaterias();
+
+    // Validación en tiempo real de horas
+    const horaInicioInput = document.getElementById('hora-inicio');
+    const horaFinInput = document.getElementById('hora-fin');
+    const mensajeHoras = document.createElement('div');
+    mensajeHoras.className = 'mt-2 text-sm font-medium hidden';
+    horaFinInput.parentElement.appendChild(mensajeHoras);
+
+    function validarHoras() {
+        const horaInicio = horaInicioInput.value;
+        const horaFin = horaFinInput.value;
+
+        if (!horaInicio || !horaFin) {
+            mensajeHoras.classList.add('hidden');
+            return true;
+        }
+
+        if (horaInicio >= horaFin) {
+            mensajeHoras.textContent = '⚠️ La hora de fin debe ser mayor a la hora de inicio';
+            mensajeHoras.className = 'mt-2 text-sm font-medium text-red-600';
+            mensajeHoras.classList.remove('hidden');
+            return false;
+        } else {
+            mensajeHoras.classList.add('hidden');
+            return true;
+        }
+    }
+
+    horaInicioInput.addEventListener('change', validarHoras);
+    horaFinInput.addEventListener('change', validarHoras);
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -80,14 +127,13 @@ function inicializarFormularioTutoria(sesion) {
             return;
         }
 
-        if (!cupos) {
-            mostrarMensaje(mensajeDiv, 'Completa este campo', 'error');
+        if (!horaInicio || !horaFin) {
+            mostrarMensaje(mensajeDiv, 'Completa los campos de hora', 'error');
             return;
         }
 
-        // Validar que hora inicio y fin no sean iguales
-        if (horaInicio === horaFin) {
-            mostrarMensaje(mensajeDiv, 'La hora de inicio no puede ser igual a la hora de fin', 'error');
+        if (!cupos) {
+            mostrarMensaje(mensajeDiv, 'Completa este campo', 'error');
             return;
         }
 
