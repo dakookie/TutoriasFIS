@@ -34,7 +34,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
   useEffect(() => {
     const verifyToken = async () => {
       const response = await api.verifyResetToken(token);
-      setIsValidToken(response.success);
+      setIsValidToken(response.success ?? false);
     };
     verifyToken();
   }, [token]);

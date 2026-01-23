@@ -23,7 +23,7 @@ interface Tutoria {
 interface Materia {
   _id: string;
   nombre: string;
-  codigo: string;
+  codigo?: string;
 }
 
 export default function TutoriasDisponiblesPage() {

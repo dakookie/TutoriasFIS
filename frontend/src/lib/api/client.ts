@@ -1,13 +1,25 @@
-// API Client para conectar con el backend Express existente
+// API Client para conectar con el backend NestJS
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 interface ApiResponse<T = unknown> {
-  success: boolean;
+  ok?: boolean;
+  success?: boolean;
   message?: string;
+  mensaje?: string;
   data?: T;
   usuario?: T;
+  token?: string;
   error?: string;
+  // Para compatibilidad con respuestas del backend
+  tutorias?: T;
+  solicitudes?: T;
+  materias?: T;
+  usuarios?: T;
+  tutores?: T;
+  estudiantes?: T;
+  mensajes?: T;
+  chats?: T;
 }
 
 interface RequestOptions extends RequestInit {
@@ -48,16 +60,40 @@ class ApiClient {
 
       if (!response.ok) {
         return {
+          ok: false,
           success: false,
-          message: data.message || 'Error en la petición',
+          message: data.message || data.mensaje || 'Error en la petición',
           error: data.error,
         };
       }
 
-      return data;
+      // Normalizar respuesta: el backend NestJS usa 'ok' en lugar de 'success'
+      // También normalizar campos de datos a 'data' para consistencia
+      const normalizedData = { ...data };
+      normalizedData.success = data.ok ?? data.success ?? true;
+      
+      // Extraer datos de campos específicos a 'data' para consistencia
+      if (!normalizedData.data) {
+        if (data.tutorias) normalizedData.data = data.tutorias;
+        else if (data.tutoria) normalizedData.data = data.tutoria;
+        else if (data.solicitudes) normalizedData.data = data.solicitudes;
+        else if (data.solicitud) normalizedData.data = data.solicitud;
+        else if (data.materias) normalizedData.data = data.materias;
+        else if (data.materia) normalizedData.data = data.materia;
+        else if (data.usuarios) normalizedData.data = data.usuarios;
+        else if (data.usuario) normalizedData.data = data.usuario;
+        else if (data.tutores) normalizedData.data = data.tutores;
+        else if (data.estudiantes) normalizedData.data = data.estudiantes;
+        else if (data.mensajes) normalizedData.data = data.mensajes;
+        else if (data.mensaje) normalizedData.data = data.mensaje;
+        else if (data.chats) normalizedData.data = data.chats;
+      }
+      
+      return normalizedData;
     } catch (error) {
       console.error('API Error:', error);
       return {
+        ok: false,
         success: false,
         message: 'Error de conexión con el servidor',
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -67,7 +103,7 @@ class ApiClient {
 
   // ==================== AUTH ====================
   
-  async login(email: string, password: string) {
+  async login(usuario: string, password: string) {
     return this.request<{
       id: string;
       nombre: string;
@@ -77,7 +113,7 @@ class ApiClient {
       materias: string[];
     }>('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ usuario, password }),
     });
   }
 
@@ -111,7 +147,7 @@ class ApiClient {
       email: string;
       rol: string;
       materias: string[];
-    }>('/api/auth/session');
+    }>('/api/auth/verificar');
   }
 
   async forgotPassword(email: string) {
@@ -121,15 +157,40 @@ class ApiClient {
     });
   }
 
-  async resetPassword(token: string, newPassword: string) {
+  async resetPassword(token: string, password: string) {
     return this.request('/api/auth/reset-password', {
       method: 'POST',
-      body: JSON.stringify({ token, newPassword }),
+      body: JSON.stringify({ token, password }),
     });
   }
 
   async verifyResetToken(token: string) {
     return this.request(`/api/auth/verify-reset-token/${token}`);
+  }
+
+  // ==================== USUARIOS ====================
+
+  async getPerfil() {
+    return this.request('/api/usuarios/perfil');
+  }
+
+  async actualizarPerfil(data: {
+    nombre?: string;
+    apellido?: string;
+    materias?: string[];
+  }) {
+    return this.request('/api/usuarios/perfil', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getTutores() {
+    return this.request('/api/usuarios/tutores');
+  }
+
+  async getEstudiantes() {
+    return this.request('/api/usuarios/estudiantes');
   }
 
   // ==================== MATERIAS ====================
@@ -138,9 +199,9 @@ class ApiClient {
     return this.request<Array<{
       _id: string;
       nombre: string;
-      codigo: string;
-      semestre: number;
-    }>>('/api/materias/publicas');
+      descripcion?: string;
+      activo: boolean;
+    }>>('/api/materias');
   }
 
   async getMateriasPorSemestre(semestre: number) {
@@ -157,27 +218,38 @@ class ApiClient {
   async getTutorias(filtros?: Record<string, string>) {
     return this.request<Array<{
       _id: string;
-      materia: string;
-      materiaNombre: string;
+      materia: { _id: string; nombre: string };
       fecha: string;
       horaInicio: string;
       horaFin: string;
       cuposDisponibles: number;
       cuposOriginales: number;
-      tutor: string;
-      tutorNombre: string;
+      tutor: { _id: string; nombre: string; email: string };
       activa: boolean;
       publicada: boolean;
     }>>('/api/tutorias', { params: filtros });
   }
 
-  async getTutoriasDisponibles(materia?: string) {
-    const params = materia ? { materia } : undefined;
+  async getTutoriasDisponibles(materiaId?: string) {
+    const params = materiaId ? { materia: materiaId } : undefined;
     return this.request('/api/tutorias/disponibles', { params });
   }
 
-  async getTutoriasTutor(tutorId: string) {
-    return this.request(`/api/tutorias/tutor/${tutorId}`);
+  async getMisTutorias() {
+    return this.request('/api/tutorias/mis-tutorias');
+  }
+
+  // Alias: obtener tutorías de un tutor específico (usa mis-tutorias para el tutor logueado)
+  async getTutoriasTutor(tutorId?: string) {
+    // Si no se pasa tutorId, se usa el endpoint de mis-tutorias (requiere auth)
+    if (!tutorId) {
+      return this.getMisTutorias();
+    }
+    return this.request('/api/tutorias', { params: { tutor: tutorId } });
+  }
+
+  async getTutoriaById(id: string) {
+    return this.request(`/api/tutorias/${id}`);
   }
 
   async crearTutoria(tutoriaData: {
@@ -185,11 +257,22 @@ class ApiClient {
     fecha: string;
     horaInicio: string;
     horaFin: string;
-    cuposOriginales: number;
+    cupos?: number;
+    cuposOriginales?: number;
+    modalidadAula?: string;
+    nombreAula?: string;
+    enlaceAula?: string;
   }) {
+    // Normalizar: aceptar cupos o cuposOriginales
+    const payload = {
+      ...tutoriaData,
+      cuposOriginales: tutoriaData.cuposOriginales ?? tutoriaData.cupos,
+    };
+    delete (payload as any).cupos;
+    
     return this.request('/api/tutorias', {
       method: 'POST',
-      body: JSON.stringify(tutoriaData),
+      body: JSON.stringify(payload),
     });
   }
 
@@ -197,10 +280,9 @@ class ApiClient {
     fecha: string;
     horaInicio: string;
     horaFin: string;
-    cuposOriginales: number;
-    modalidadAula: string;
-    nombreAula: string;
-    enlaceAula: string;
+    cupos: number;
+    activa: boolean;
+    publicada: boolean;
   }>) {
     return this.request(`/api/tutorias/${tutoriaId}`, {
       method: 'PUT',
@@ -214,10 +296,21 @@ class ApiClient {
     });
   }
 
-  async publicarTutoria(tutoriaId: string) {
-    return this.request(`/api/tutorias/${tutoriaId}/publicar`, {
+  async cambiarEstadoTutoria(tutoriaId: string, estado: string) {
+    return this.request(`/api/tutorias/${tutoriaId}/estado`, {
       method: 'PATCH',
+      body: JSON.stringify({ estado }),
     });
+  }
+
+  // Publicar una tutoría (cambiar estado a publicada)
+  async publicarTutoria(tutoriaId: string) {
+    return this.actualizarTutoria(tutoriaId, { publicada: true });
+  }
+
+  // Despublicar una tutoría
+  async despublicarTutoria(tutoriaId: string) {
+    return this.actualizarTutoria(tutoriaId, { publicada: false });
   }
 
   // ==================== SOLICITUDES ====================
@@ -225,27 +318,37 @@ class ApiClient {
   async crearSolicitud(tutoriaId: string) {
     return this.request('/api/solicitudes', {
       method: 'POST',
-      body: JSON.stringify({ tutoriaId }),
+      body: JSON.stringify({ tutoria: tutoriaId }),
     });
   }
 
+  async getMisSolicitudes() {
+    return this.request('/api/solicitudes/mis-solicitudes');
+  }
+
+  // Alias para compatibilidad con páginas existentes
   async getSolicitudesEstudiante() {
-    return this.request('/api/solicitudes/estudiante');
+    return this.getMisSolicitudes();
   }
 
-  async getSolicitudesTutor() {
-    return this.request('/api/solicitudes/tutor');
+  async getSolicitudesPendientes() {
+    return this.request('/api/solicitudes/pendientes');
   }
 
-  async aceptarSolicitud(solicitudId: string) {
-    return this.request(`/api/solicitudes/${solicitudId}/aceptar`, {
+  async getSolicitudesPorTutoria(tutoriaId: string) {
+    return this.request(`/api/solicitudes/tutoria/${tutoriaId}`);
+  }
+
+  async aprobarSolicitud(solicitudId: string) {
+    return this.request(`/api/solicitudes/${solicitudId}/aprobar`, {
       method: 'PATCH',
     });
   }
 
-  async rechazarSolicitud(solicitudId: string) {
+  async rechazarSolicitud(solicitudId: string, motivo?: string) {
     return this.request(`/api/solicitudes/${solicitudId}/rechazar`, {
       method: 'PATCH',
+      body: JSON.stringify({ motivo }),
     });
   }
 
@@ -257,40 +360,114 @@ class ApiClient {
 
   // ==================== ADMIN ====================
 
-  async getSolicitudesTutores() {
-    return this.request('/api/admin/solicitudes/tutores');
+  async getUsuarios(filtros?: { rol?: string; activo?: string }) {
+    return this.request('/api/usuarios', { params: filtros });
   }
 
-  async getSolicitudesEstudiantes() {
-    return this.request('/api/admin/solicitudes/estudiantes');
+  async getUsuarioById(id: string) {
+    return this.request(`/api/usuarios/${id}`);
   }
 
-  async aprobarUsuario(id: string) {
-    return this.request(`/api/admin/solicitudes/${id}/aprobar`, {
+  async actualizarUsuario(id: string, data: Record<string, unknown>) {
+    return this.request(`/api/usuarios/${id}`, {
       method: 'PUT',
+      body: JSON.stringify(data),
     });
   }
 
-  async rechazarUsuario(id: string) {
-    return this.request(`/api/admin/solicitudes/${id}`, {
+  async cambiarEstadoUsuario(id: string, activo: boolean) {
+    return this.request(`/api/usuarios/${id}/estado`, {
+      method: 'PATCH',
+      body: JSON.stringify({ activo }),
+    });
+  }
+
+  async eliminarUsuario(id: string) {
+    return this.request(`/api/usuarios/${id}`, {
       method: 'DELETE',
     });
   }
 
+  async getEstadisticasUsuarios() {
+    return this.request('/api/usuarios/estadisticas');
+  }
+
+  // Métodos para solicitudes de registro (usuarios inactivos)
+  async getSolicitudesTutores() {
+    return this.request('/api/usuarios', {
+      params: { rol: 'Tutor', activo: 'false' },
+    });
+  }
+
+  async getSolicitudesEstudiantes() {
+    return this.request('/api/usuarios', {
+      params: { rol: 'Estudiante', activo: 'false' },
+    });
+  }
+
+  async aprobarUsuario(id: string) {
+    return this.request(`/api/usuarios/${id}/estado`, {
+      method: 'PATCH',
+      body: JSON.stringify({ activo: true }),
+    });
+  }
+
+  async rechazarUsuario(id: string) {
+    return this.eliminarUsuario(id);
+  }
+
   // ==================== MENSAJES ====================
 
-  async getConversaciones() {
-    return this.request('/api/mensajes/conversaciones');
+  async getChats() {
+    return this.request('/api/mensajes/chats');
   }
 
-  async getMensajes(receptorId: string) {
-    return this.request(`/api/mensajes/${receptorId}`);
+  async getConversacion(usuarioId: string) {
+    return this.request(`/api/mensajes/conversacion/${usuarioId}`);
   }
 
-  async enviarMensaje(receptorId: string, contenido: string) {
+  async getMensajesNoLeidos() {
+    return this.request('/api/mensajes/no-leidos');
+  }
+
+  async enviarMensaje(receptorId: string, contenido: string, tutoriaId?: string) {
     return this.request('/api/mensajes', {
       method: 'POST',
-      body: JSON.stringify({ receptorId, contenido }),
+      body: JSON.stringify({ receptor: receptorId, contenido, tutoria: tutoriaId }),
+    });
+  }
+
+  async marcarMensajeLeido(mensajeId: string) {
+    return this.request(`/api/mensajes/${mensajeId}/leido`, {
+      method: 'PATCH',
+    });
+  }
+
+  async marcarConversacionLeida(usuarioId: string) {
+    return this.request(`/api/mensajes/conversacion/${usuarioId}/leidos`, {
+      method: 'PATCH',
+    });
+  }
+
+  // ==================== MATERIAS ADMIN ====================
+
+  async crearMateria(data: { nombre: string; descripcion?: string }) {
+    return this.request('/api/materias', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async actualizarMateria(id: string, data: { nombre?: string; descripcion?: string; activo?: boolean }) {
+    return this.request(`/api/materias/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async eliminarMateria(id: string) {
+    return this.request(`/api/materias/${id}`, {
+      method: 'DELETE',
     });
   }
 }

@@ -14,7 +14,7 @@ import { Input, Button, Alert, Card, CardContent, CardHeader, CardTitle, Select,
 interface Materia {
   _id: string;
   nombre: string;
-  codigo: string;
+  codigo?: string;
 }
 
 export default function NuevaTutoriaPage() {
@@ -68,7 +68,10 @@ export default function NuevaTutoriaPage() {
       fecha: data.fecha,
       horaInicio: data.horaInicio,
       horaFin: data.horaFin,
-      cuposOriginales: parseInt(data.cuposOriginales), // Convertir string a number
+      cuposOriginales: parseInt(data.cuposOriginales),
+      ...(data.modalidadAula && { modalidadAula: data.modalidadAula }),
+      ...(data.nombreAula && { nombreAula: data.nombreAula }),
+      ...(data.enlaceAula && { enlaceAula: data.enlaceAula }),
     });
 
     if (response.success) {

@@ -19,8 +19,8 @@ type RegistroFormData = RegistroEstudianteFormData | RegistroTutorFormData;
 interface Materia {
   _id: string;
   nombre: string;
-  codigo: string;
-  semestre: number;
+  codigo?: string;
+  semestre?: number;
 }
 
 export default function RegistroPage() {

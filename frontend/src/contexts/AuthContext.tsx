@@ -30,8 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = useCallback(async () => {
     try {
       const response = await api.getSession();
-      if (response.success && response.usuario) {
+      // El backend NestJS retorna { ok: true, usuario: {...} } o el usuario directo
+      if ((response.success || response.ok) && response.usuario) {
         setUser(response.usuario as User);
+      } else if (response.success && (response as any).userId) {
+        // Si el usuario viene directo en la respuesta
+        setUser(response as unknown as User);
       } else {
         setUser(null);
       }
@@ -49,7 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await api.login(email, password);
     
-    if (response.success && response.usuario) {
+    // El backend NestJS retorna { ok: true, token: '...', usuario: {...} }
+    if ((response.success || response.ok) && response.usuario) {
       // Refrescar sesión para obtener datos completos del token
       await refreshSession();
       return { success: true };
@@ -57,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     return { 
       success: false, 
-      message: response.message || 'Error al iniciar sesión' 
+      message: response.message || response.mensaje || 'Error al iniciar sesión' 
     };
   };
 
