@@ -35,27 +35,27 @@ function generarLinksNavegacion(usuario) {
 // Función para ir al dashboard
 function irAlDashboard() {
     if (esTutor) {
-        window.location.href = '/tutor.html';
+        window.location.href = '/tutor';
     } else {
-        window.location.href = '/estudiante.html';
+        window.location.href = '/estudiante';
     }
 }
 
-// Funciones placeholder para navegación (pueden no estar disponibles desde aula.html)
+// Funciones para navegación
 function mostrarVistaTutorias() {
     if (esTutor) {
-        window.location.href = '/tutor.html#tutorias';
+        window.location.href = '/tutor#tutorias';
     } else {
-        window.location.href = '/estudiante.html#tutorias';
+        window.location.href = '/estudiante#tutorias';
     }
 }
 
 function mostrarVistaSolicitudes() {
-    window.location.href = '/estudiante.html#solicitudes';
+    window.location.href = '/estudiante#solicitudes';
 }
 
 function mostrarVistaRegistro() {
-    window.location.href = '/tutor.html#registro';
+    window.location.href = '/tutor#registro';
 }
 
 // Función para mostrar mensajes en pantalla

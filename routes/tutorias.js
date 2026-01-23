@@ -243,6 +243,7 @@ router.get('/disponibles', requireAuth, async (req, res) => {
         
         let filtro = {
             activa: true,
+            publicada: true,  // Solo tutorías publicadas
             cuposDisponibles: { $gt: 0 },
             fecha: { $gte: inicioDia }  // Desde el inicio del día actual en adelante
         };
