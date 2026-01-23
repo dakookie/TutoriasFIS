@@ -96,7 +96,7 @@ class APIClient {
 
     // Materias endpoints
     static async obtenerMaterias() {
-        return this.request('/api/materias');
+        return this.request('/api/materias/publicas');
     }
 
     static async obtenerMateriasPorSemestre(semestre) {

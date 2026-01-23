@@ -71,8 +71,8 @@ async function cargarSolicitudesTutores() {
         let html = '';
 
         solicitudes.forEach((solicitud, index) => {
-            // Generar un nombre de usuario basado en el email (parte antes del @)
-            const nombreUsuario = solicitud.email.split('@')[0];
+            // Usar username del modelo o generar uno basado en el email
+            const nombreUsuario = solicitud.username || solicitud.email.split('@')[0];
             
             html += `
                 <tr class="hover:bg-gray-50">
@@ -131,8 +131,8 @@ async function cargarSolicitudesEstudiantes() {
         let html = '';
 
         solicitudes.forEach((solicitud, index) => {
-            // Generar un nombre de usuario basado en el email (parte antes del @)
-            const nombreUsuario = solicitud.email.split('@')[0];
+            // Usar username del modelo o generar uno basado en el email
+            const nombreUsuario = solicitud.username || solicitud.email.split('@')[0];
             
             html += `
                 <tr class="hover:bg-gray-50">

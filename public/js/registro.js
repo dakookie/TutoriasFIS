@@ -7,12 +7,73 @@ document.addEventListener('DOMContentLoaded', function() {
     const grupoMaterias = document.getElementById('grupo-materias');
     const labelArchivo = document.getElementById('label-archivo');
     const inputArchivo = document.getElementById('archivo');
-    const inputMaterias = document.getElementById('materias');
+    const materiasContainer = document.getElementById('materias-container');
     const nombreArchivoSpan = document.getElementById('nombre-archivo');
 
     const mensajeDiv = document.getElementById('mensaje-registro');
 
     let archivoSeleccionado = null;
+    let materiasDisponibles = [];
+    let materiasSeleccionadas = [];
+
+    // Cargar materias desde la API
+    async function cargarMaterias() {
+        try {
+            const materias = await APIClient.obtenerMaterias();
+            materiasDisponibles = materias;
+            renderizarMaterias();
+        } catch (error) {
+            console.error('Error al cargar materias:', error);
+            materiasContainer.innerHTML = '<p class="text-sm text-red-500 text-center py-2">Error al cargar materias. Intenta recargar la página.</p>';
+        }
+    }
+
+    // Renderizar checkboxes de materias
+    function renderizarMaterias() {
+        if (materiasDisponibles.length === 0) {
+            materiasContainer.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">No hay materias disponibles.</p>';
+            return;
+        }
+
+        let html = '<div class="space-y-2">';
+        materiasDisponibles.forEach(materia => {
+            html += `
+                <label class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                    <input type="checkbox" 
+                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                           value="${materia._id}" 
+                           data-nombre="${materia.nombre}"
+                           onchange="toggleMateria(this)">
+                    <span class="text-sm text-gray-700">${materia.nombre}</span>
+                    ${materia.codigo ? `<span class="text-xs text-gray-500">(${materia.codigo})</span>` : ''}
+                </label>
+            `;
+        });
+        html += '</div>';
+        materiasContainer.innerHTML = html;
+    }
+
+    // Función global para manejar cambios en checkboxes
+    window.toggleMateria = function(checkbox) {
+        const materiaId = checkbox.value;
+        const materiaNombre = checkbox.dataset.nombre;
+        
+        if (checkbox.checked) {
+            if (!materiasSeleccionadas.includes(materiaId)) {
+                materiasSeleccionadas.push(materiaId);
+            }
+        } else {
+            materiasSeleccionadas = materiasSeleccionadas.filter(id => id !== materiaId);
+        }
+        
+        // Limpiar error si hay al menos una materia seleccionada
+        if (materiasSeleccionadas.length > 0) {
+            mostrarError('error-materias', '');
+        }
+    };
+
+    // Cargar materias al iniciar
+    cargarMaterias();
 
     // Cambio de rol - mostrar/ocultar campo de archivo y materias
     rolSelect.addEventListener('change', function() {
@@ -23,19 +84,27 @@ document.addEventListener('DOMContentLoaded', function() {
             grupoMaterias.style.display = 'block';
             labelArchivo.textContent = 'Currículum Académico (PDF) *';
             inputArchivo.required = true;
-            inputMaterias.required = true;
+            // Cargar materias si aún no se han cargado
+            if (materiasDisponibles.length === 0) {
+                cargarMaterias();
+            }
         } else if (rol === 'Estudiante') {
             grupoArchivo.style.display = 'block';
             grupoMaterias.style.display = 'none';
             labelArchivo.textContent = 'Carnet Estudiantil (PDF) *';
             inputArchivo.required = true;
-            inputMaterias.required = false;
+            // Limpiar selección de materias
+            materiasSeleccionadas = [];
+            if (materiasContainer) {
+                const checkboxes = materiasContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
+            }
         } else {
             grupoArchivo.style.display = 'none';
             grupoMaterias.style.display = 'none';
             inputArchivo.required = false;
-            inputMaterias.required = false;
             archivoSeleccionado = null;
+            materiasSeleccionadas = [];
         }
     });
 
@@ -75,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const rol = document.getElementById('rol').value;
         const usuario = document.getElementById('usuario').value.trim();
         const password = document.getElementById('password').value;
-        const materiasInput = document.getElementById('materias').value.trim();
 
         let esValido = true;
 
@@ -116,8 +184,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Validar materias si es tutor
-        if (rol === 'Tutor' && !materiasInput) {
-            mostrarError('error-materias', 'Debes ingresar al menos una materia');
+        if (rol === 'Tutor' && materiasSeleccionadas.length === 0) {
+            mostrarError('error-materias', 'Debes seleccionar al menos una materia');
             esValido = false;
         }
 
@@ -132,10 +200,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 archivoBase64 = await archivoABase64(archivoSeleccionado);
             }
 
-            // Procesar materias (convertir string separado por comas a array)
-            const materiasArray = rol === 'Tutor' && materiasInput
-                ? materiasInput.split(',').map(m => m.trim()).filter(m => m.length > 0)
-                : [];
+            // Usar los IDs de las materias seleccionadas
+            const materiasArray = rol === 'Tutor' ? materiasSeleccionadas : [];
 
             // Crear objeto de datos para el registro
             const datosRegistro = {
@@ -144,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 email: correo, // El backend espera 'email'
                 password,
                 rol,
+                username: usuario, // El backend espera 'username'
                 materias: materiasArray,
                 pdf: archivoBase64 // El backend espera 'pdf'
             };

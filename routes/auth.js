@@ -6,7 +6,7 @@ const Usuario = require('../models/Usuario');
 // POST /api/auth/registro - Registrar nuevo usuario (tutor o estudiante)
 router.post('/registro', async (req, res) => {
     try {
-        const { nombre, apellido, email, password, rol, materias, pdf } = req.body;
+        const { nombre, apellido, email, password, rol, materias, pdf, username } = req.body;
 
         // Validar que el rol sea válido
         if (!['Tutor', 'Estudiante'].includes(rol)) {
@@ -21,8 +21,19 @@ router.post('/registro', async (req, res) => {
         if (usuarioExistente) {
             return res.status(400).json({
                 success: false,
-                message: 'El email ya está registrado'
+                message: 'El correo electrónico ya está registrado'
             });
+        }
+
+        // Verificar si el username ya existe (si se proporciona)
+        if (username) {
+            const usernameExistente = await Usuario.findOne({ username });
+            if (usernameExistente) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El nombre de usuario ya está en uso'
+                });
+            }
         }
 
         // Crear nuevo usuario (pendiente de aprobación)
@@ -32,6 +43,7 @@ router.post('/registro', async (req, res) => {
             email,
             password,
             rol,
+            username: username || null,
             materias: materias || [],
             pdf: pdf || null,
             activo: false
@@ -66,13 +78,18 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Buscar usuario por email
-        const usuario = await Usuario.findOne({ email });
+        // Buscar usuario por email o username
+        const usuario = await Usuario.findOne({
+            $or: [
+                { email: email },
+                { username: email }
+            ]
+        });
         
         if (!usuario) {
             return res.status(401).json({
                 success: false,
-                message: 'Email o contraseña incorrectos'
+                message: 'Usuario o contraseña incorrectos'
             });
         }
 
@@ -90,7 +107,7 @@ router.post('/login', async (req, res) => {
         if (!passwordCorrecta) {
             return res.status(401).json({
                 success: false,
-                message: 'Email o contraseña incorrectos'
+                message: 'Usuario o contraseña incorrectos'
             });
         }
 

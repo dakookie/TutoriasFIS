@@ -12,6 +12,12 @@ const usuarioSchema = new mongoose.Schema({
         required: [true, 'El apellido es requerido'],
         trim: true
     },
+    username: {
+        type: String,
+        unique: true,
+        sparse: true,
+        trim: true
+    },
     email: {
         type: String,
         required: [true, 'El email es requerido'],
@@ -30,7 +36,7 @@ const usuarioSchema = new mongoose.Schema({
         required: true
     },
     materias: [{
-        type: String
+        type: mongoose.Schema.Types.Mixed  // Permite tanto String como ObjectId para compatibilidad
     }],
     activo: {
         type: Boolean,

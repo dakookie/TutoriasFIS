@@ -9,7 +9,31 @@ router.get('/solicitudes/tutores', requireRole('Administrador'), async (req, res
         const solicitudes = await Usuario.find({
             rol: 'Tutor',
             activo: false
-        }).select('-password');
+        })
+        .select('-password')
+        .lean();
+
+        // Para cada solicitud, convertir los IDs de materias a nombres si es necesario
+        const Materia = require('../models/Materia');
+        for (let solicitud of solicitudes) {
+            if (solicitud.materias && solicitud.materias.length > 0) {
+                // Si las materias son ObjectIds, obtener sus nombres
+                const materiasConNombres = [];
+                for (let materiaIdOrName of solicitud.materias) {
+                    if (typeof materiaIdOrName === 'string' && materiaIdOrName.match(/^[0-9a-fA-F]{24}$/)) {
+                        // Es un ObjectId
+                        const materia = await Materia.findById(materiaIdOrName).select('nombre');
+                        if (materia) {
+                            materiasConNombres.push(materia.nombre);
+                        }
+                    } else {
+                        // Es un nombre directo
+                        materiasConNombres.push(materiaIdOrName);
+                    }
+                }
+                solicitud.materias = materiasConNombres;
+            }
+        }
 
         res.json({
             success: true,
