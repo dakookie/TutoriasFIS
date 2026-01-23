@@ -13,9 +13,15 @@ const connectDB = require('./config/database');
 // Crear aplicación Express
 const app = express();
 const httpServer = createServer(app);
+
+// Orígenes permitidos para CORS (incluye Next.js en desarrollo)
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL] 
+    : ['http://localhost:3000', 'http://localhost:3001'];
+
 const io = new Server(httpServer, {
     cors: {
-        origin: process.env.NODE_ENV === 'production' ? false : ['http://localhost:3000'],
+        origin: allowedOrigins,
         credentials: true
     }
 });
@@ -25,13 +31,14 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:3000',
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' })); // Aumentar límite para PDFs
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
 
 // Middleware para Socket.IO - Autenticación JWT
 io.use((socket, next) => {

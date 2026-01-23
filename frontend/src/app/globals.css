@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary: #000DFF;
+  --primary-hover: #0000cc;
+  --accent-teal: #007AA2;
+  --accent-teal-dark: #005f7a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-teal-dark: var(--accent-teal-dark);
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Mensajes de estado */
+.mensaje {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.mensaje.error {
+  color: #dc2626;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+}
+
+.mensaje.success {
+  color: #16a34a;
+  background-color: #dcfce7;
+  border: 1px solid #bbf7d0;
+}
+
+/* Imagen de fondo fija */
+.bg-image-fixed {
+  object-fit: cover;
+  object-position: center;
+  will-change: auto;
+}
+
+/* File Upload Styling */
+.file-upload-label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  background-color: #f9fafb;
+}
+
+.file-upload-label:hover {
+  border-color: var(--primary);
+  background-color: #eff6ff;
+}
+
+.file-uploaded {
+  border-color: #16a34a;
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+input[type="file"] {
+  display: none;
+}
