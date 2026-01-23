@@ -5,6 +5,18 @@
 
 let filtroMateriaActual = 'Todas';
 
+// Funciones para cambiar de vista
+function mostrarVistaTutorias() {
+    document.getElementById('vista-tutorias').classList.remove('hidden');
+    document.getElementById('vista-solicitudes').classList.add('hidden');
+}
+
+function mostrarVistaSolicitudes() {
+    document.getElementById('vista-tutorias').classList.add('hidden');
+    document.getElementById('vista-solicitudes').classList.remove('hidden');
+    cargarSolicitudesEstudiante();
+}
+
 // Inicializar filtro de materias
 async function inicializarFiltroMaterias() {
     const filtroSelect = document.getElementById('filtro-materia');

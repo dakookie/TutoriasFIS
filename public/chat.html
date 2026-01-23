@@ -107,26 +107,21 @@
 </head>
 <body class="bg-gray-50">
     <!-- Navbar -->
-    <nav class="bg-blue-600 shadow-lg">
-        <div class="px-4">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center">
-                    <svg class="w-8 h-8 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                    <h1 class="text-white text-xl font-bold">Chat - Tutorías FIS</h1>
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-8">
+                    <a href="#" id="logo-link" onclick="irAlInicio(); return false;" class="text-xl font-semibold text-gray-800">Tutorías FIS</a>
+                    <div class="hidden md:flex space-x-6" id="nav-links">
+                        <!-- Se llenará dinámicamente según el rol -->
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-white text-sm" id="usuario-nombre"></span>
-                    <button onclick="window.location.href = getRolHomePage()" 
-                            class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                        </svg>
-                        Inicio
-                    </button>
-                    <button id="btn-cerrar-sesion" 
-                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                    <span class="text-gray-700 text-sm font-medium" id="usuario-nombre">
+                        Conectando...
+                    </span>
+                    <button id="btn-logout"
+                        class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md text-sm font-medium transition">
                         Sign Out
                     </button>
                 </div>
@@ -135,7 +130,8 @@
     </nav>
 
     <!-- Contenedor Principal -->
-    <div class="flex h-screen bg-gray-100" style="height: calc(100vh - 64px);">
+    <div class="flex bg-gray-100" style="height: calc(100vh - 64px);">
+
         <!-- Panel de Conversaciones -->
         <div class="w-96 bg-white border-r border-gray-200 flex flex-col">
             <!-- Header del panel -->

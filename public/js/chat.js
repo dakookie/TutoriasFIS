@@ -8,6 +8,69 @@ let chatSocket = null;
 // Variable global para almacenar el usuario actual
 let usuarioActual = null;
 
+// Función para ir al inicio según el rol
+function irAlInicio() {
+    if (usuarioActual) {
+        if (usuarioActual.rol === 'Tutor') {
+            window.location.href = '/tutor.html';
+        } else if (usuarioActual.rol === 'Estudiante') {
+            window.location.href = '/estudiante.html';
+        } else if (usuarioActual.rol === 'Administrador') {
+            window.location.href = '/admin.html';
+        }
+    } else {
+        window.location.href = '/';
+    }
+}
+
+// Función para generar los links de navegación según el rol
+function generarLinksNavegacion(usuario) {
+    const navLinks = document.getElementById('nav-links');
+    if (!navLinks) return;
+
+    let html = `
+        <a href="#" onclick="irAlInicio(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">← Regresar</a>
+    `;
+
+    if (usuario.rol === 'Estudiante') {
+        html += `
+            <a href="#" onclick="irAlEstudiante(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Consultar Tutorías</a>
+            <a href="#" onclick="irAlSolicitudes(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Ver Solicitudes</a>
+        `;
+    } else if (usuario.rol === 'Tutor') {
+        html += `
+            <a href="#" onclick="irAlTutorHome(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Registrar Tutoría</a>
+            <a href="#" onclick="irAlTutoriasCreadas(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Tutorías Creadas</a>
+        `;
+    }
+
+    html += `<span class="text-gray-700 font-medium">Chat</span>`;
+    html += `
+        <span id="badge-mensajes" class="hidden ml-2 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white">0</span>
+    `;
+
+    navLinks.innerHTML = html;
+}
+
+// Funciones auxiliares de navegación
+function irAlEstudiante() {
+    window.location.href = '/estudiante.html';
+}
+
+function irAlSolicitudes() {
+    // Esta función necesita estar en estudiante.html, pero podemos ir a estudiante.html y manejar con hash
+    window.location.href = '/estudiante.html#solicitudes';
+}
+
+function irAlTutorHome() {
+    window.location.href = '/tutor.html';
+}
+
+function irAlTutoriasCreadas() {
+    // Similar a estudiante, manejamos con hash
+    window.location.href = '/tutor.html#tutorias';
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     // Obtener sesión del usuario
     const usuario = await obtenerSesion();
@@ -19,6 +82,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Guardar usuario globalmente
     usuarioActual = usuario;
+
+    // Generar links de navegación según el rol
+    generarLinksNavegacion(usuario);
 
     // Inicializar Socket.IO para chat
     chatSocket = io({
@@ -52,8 +118,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('sin-seleccion').classList.add('flex');
     });
 
-    // Configurar botón cerrar sesión
-    document.getElementById('btn-cerrar-sesion').addEventListener('click', async function() {
+    // Configurar botón cerrar sesión (ahora btn-logout)
+    document.getElementById('btn-logout').addEventListener('click', async function() {
         try {
             await cerrarSesion();
         } catch (error) {

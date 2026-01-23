@@ -82,9 +82,19 @@ router.get('/estudiante', requireRole('Estudiante'), async (req, res) => {
             .populate('tutoria')
             .sort({ createdAt: -1 });
 
+        // Mapear solicitudes para incluir nombre de materia desde la tutoría
+        const solicitudesConMateria = solicitudes.map(sol => {
+            const solicitudObj = sol.toObject();
+            // Si la tutoría tiene materiaNombre, usarlo; si no, intentar desde materia
+            if (sol.tutoria && sol.tutoria.materiaNombre) {
+                solicitudObj.materia = sol.tutoria.materiaNombre;
+            }
+            return solicitudObj;
+        });
+
         res.json({
             success: true,
-            solicitudes
+            solicitudes: solicitudesConMateria
         });
 
     } catch (error) {

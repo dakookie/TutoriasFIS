@@ -6,14 +6,66 @@
 let tutoriaId = null;
 let esTutor = false;
 
+// Función para mostrar mensajes en pantalla
+function mostrarMensaje(texto, tipo = 'success') {
+    const mensajeDiv = document.getElementById('mensaje-alerta');
+    if (!mensajeDiv) return;
+    
+    // Establecer estilos según el tipo
+    let bgColor, textColor, borderColor, icon;
+    if (tipo === 'success') {
+        bgColor = 'bg-green-50';
+        textColor = 'text-green-800';
+        borderColor = 'border-green-500';
+        icon = '✓';
+    } else if (tipo === 'error') {
+        bgColor = 'bg-red-50';
+        textColor = 'text-red-800';
+        borderColor = 'border-red-500';
+        icon = '✕';
+    } else if (tipo === 'warning') {
+        bgColor = 'bg-yellow-50';
+        textColor = 'text-yellow-800';
+        borderColor = 'border-yellow-500';
+        icon = '⚠';
+    } else {
+        bgColor = 'bg-blue-50';
+        textColor = 'text-blue-800';
+        borderColor = 'border-blue-500';
+        icon = 'ℹ';
+    }
+    
+    mensajeDiv.className = `${bgColor} ${textColor} ${borderColor} p-4 rounded-lg border-l-4 flex items-start`;
+    mensajeDiv.innerHTML = `
+        <span class="mr-3 text-lg font-bold">${icon}</span>
+        <div class="flex-1">${texto}</div>
+        <button onclick="ocultarMensaje()" class="ml-3 text-lg font-bold hover:opacity-70">&times;</button>
+    `;
+    mensajeDiv.classList.remove('hidden');
+    
+    // Auto-ocultar después de 5 segundos
+    setTimeout(() => {
+        mensajeDiv.classList.add('hidden');
+    }, 5000);
+}
+
+function ocultarMensaje() {
+    const mensajeDiv = document.getElementById('mensaje-alerta');
+    if (mensajeDiv) {
+        mensajeDiv.classList.add('hidden');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     // Obtener ID de la tutoría desde la URL
     const urlParams = new URLSearchParams(window.location.search);
     tutoriaId = urlParams.get('id');
 
     if (!tutoriaId) {
-        alert('ID de tutoría no válido');
-        window.location.href = '/';
+        mostrarMensaje('ID de tutoría no válido', 'error');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 2000);
         return;
     }
 
@@ -337,17 +389,17 @@ async function mostrarModalConfiguracion(esEdicion = false) {
 
         // Validaciones
         if (!modalidadFinal) {
-            alert('Por favor, selecciona una modalidad');
+            mostrarMensaje('Por favor, selecciona una modalidad', 'warning');
             return;
         }
 
         if (modalidadFinal === 'Presencial' && !nombreAulaFinal) {
-            alert('Por favor, ingresa el nombre del aula');
+            mostrarMensaje('Por favor, ingresa el nombre del aula', 'warning');
             return;
         }
 
         if (modalidadFinal === 'Virtual' && !enlaceReunionFinal) {
-            alert('Por favor, ingresa el enlace de la reunión');
+            mostrarMensaje('Por favor, ingresa el enlace de la reunión', 'warning');
             return;
         }
 
@@ -376,10 +428,10 @@ async function mostrarModalConfiguracion(esEdicion = false) {
                 await cargarBibliografias();
             }
             
-            alert(esEdicion ? 'Configuración actualizada exitosamente' : 'Aula configurada exitosamente');
+            mostrarMensaje(esEdicion ? '✓ Configuración actualizada exitosamente' : '✓ Aula configurada exitosamente', 'success');
         } catch (error) {
             console.error('Error al configurar el aula:', error);
-            alert(error.message || 'Error al configurar el aula');
+            mostrarMensaje(error.message || 'Error al configurar el aula', 'error');
         }
     });
 
@@ -397,12 +449,12 @@ function inicializarFormularioPublicacion() {
         const imagenInput = document.getElementById('imagen-publicacion');
 
         if (!titulo) {
-            alert('El título es requerido');
+            mostrarMensaje('El título es requerido', 'warning');
             return;
         }
 
         if (!contenido) {
-            alert('El contenido es requerido');
+            mostrarMensaje('El contenido es requerido', 'warning');
             return;
         }
 
@@ -416,7 +468,7 @@ function inicializarFormularioPublicacion() {
             const tiposPermitidos = ['png', 'jpg', 'jpeg', 'gif'];
 
             if (!tiposPermitidos.includes(extensionImagen)) {
-                alert('Solo se permiten imágenes (PNG, JPG, JPEG, GIF)');
+                mostrarMensaje('Solo se permiten imágenes (PNG, JPG, JPEG, GIF)', 'warning');
                 return;
             }
 
@@ -438,10 +490,10 @@ function inicializarFormularioPublicacion() {
             // Recargar publicaciones
             await cargarPublicaciones();
             
-            alert('Publicación creada exitosamente');
+            mostrarMensaje('✓ Publicación creada exitosamente', 'success');
         } catch (error) {
             console.error('Error al crear publicación:', error);
-            alert(error.message || 'Error al crear publicación');
+            mostrarMensaje(error.message || 'Error al crear publicación', 'error');
         }
     });
 }
@@ -456,12 +508,12 @@ function inicializarFormularioBibliografia() {
         const archivoInput = document.getElementById('archivo-bibliografia');
 
         if (!titulo) {
-            alert('El título es requerido');
+            mostrarMensaje('El título es requerido', 'warning');
             return;
         }
 
         if (!archivoInput.files || archivoInput.files.length === 0) {
-            alert('Debes seleccionar un archivo');
+            mostrarMensaje('Debes seleccionar un archivo', 'warning');
             return;
         }
 
@@ -470,7 +522,7 @@ function inicializarFormularioBibliografia() {
         const tiposPermitidos = ['pdf', 'docx', 'xlsx', 'ppt', 'pptx'];
 
         if (!tiposPermitidos.includes(extension)) {
-            alert('Solo se permiten documentos: PDF, DOCX, XLSX, PPT, PPTX');
+            mostrarMensaje('Solo se permiten documentos: PDF, DOCX, XLSX, PPT, PPTX', 'warning');
             return;
         }
 
@@ -488,10 +540,10 @@ function inicializarFormularioBibliografia() {
                 // Recargar bibliografías
                 await cargarBibliografias();
                 
-                alert('Bibliografía subida exitosamente');
+                mostrarMensaje('✓ Bibliografía subida exitosamente', 'success');
             } catch (error) {
                 console.error('Error al subir bibliografía:', error);
-                alert(error.message || 'Error al subir bibliografía');
+                mostrarMensaje(error.message || 'Error al subir bibliografía', 'error');
             }
         };
 
@@ -720,7 +772,7 @@ function mostrarModalEditarPublicacion(id, titulo, contenido, imagen, tipoImagen
         const imagenInput = document.getElementById('edit-imagen-publicacion');
 
         if (!nuevoTitulo || !nuevoContenido) {
-            alert('El título y el contenido son requeridos');
+            mostrarMensaje('El título y el contenido son requeridos', 'warning');
             return;
         }
 
@@ -734,7 +786,7 @@ function mostrarModalEditarPublicacion(id, titulo, contenido, imagen, tipoImagen
             const tiposPermitidos = ['png', 'jpg', 'jpeg', 'gif'];
 
             if (!tiposPermitidos.includes(nuevoTipoImagen)) {
-                alert('Solo se permiten imágenes (PNG, JPG, JPEG, GIF)');
+                mostrarMensaje('Solo se permiten imágenes (PNG, JPG, JPEG, GIF)', 'warning');
                 return;
             }
 
@@ -750,10 +802,10 @@ function mostrarModalEditarPublicacion(id, titulo, contenido, imagen, tipoImagen
             await APIClient.editarPublicacion(tutoriaId, id, nuevoTitulo, nuevoContenido, nuevaImagen, nuevoTipoImagen);
             cerrarModal('modalEditarPublicacion');
             await cargarPublicaciones();
-            alert('Publicación actualizada exitosamente');
+            mostrarMensaje('✓ Publicación actualizada exitosamente', 'success');
         } catch (error) {
             console.error('Error al actualizar publicación:', error);
-            alert(error.message || 'Error al actualizar publicación');
+            mostrarMensaje(error.message || 'Error al actualizar publicación', 'error');
         }
     });
 
