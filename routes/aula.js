@@ -171,9 +171,11 @@ router.get('/:tutoriaId', requireAuth, async (req, res) => {
         }
 
         // Verificar permisos: el tutor de la tutoría o estudiantes con solicitud aceptada
-        const esTutor = tutoria.tutor._id.toString() === req.user.userId;
+        const esTutor = tutoria.tutor._id.toString() === req.user.userId.toString();
         
         let esEstudianteAceptado = false;
+        let motivoRechazo = '';
+        
         if (req.user.rol === 'Estudiante') {
             const solicitud = await Solicitud.findOne({
                 tutoria: tutoriaId,
@@ -181,12 +183,37 @@ router.get('/:tutoriaId', requireAuth, async (req, res) => {
                 estado: 'Aceptada'
             });
             esEstudianteAceptado = !!solicitud;
+            if (!esEstudianteAceptado) {
+                // Verificar si tiene solicitud pero no aceptada
+                const solicitudExistente = await Solicitud.findOne({
+                    tutoria: tutoriaId,
+                    estudiante: req.user.userId
+                });
+                if (solicitudExistente) {
+                    motivoRechazo = `Tu solicitud está en estado: ${solicitudExistente.estado}`;
+                } else {
+                    motivoRechazo = 'No tienes una solicitud para esta tutoría';
+                }
+            }
+        } else if (req.user.rol === 'Administrador') {
+            // Los administradores NO tienen acceso a las aulas virtuales
+            motivoRechazo = 'Los administradores no pueden acceder a las aulas virtuales';
         }
+
+        // Log para debugging
+        console.log('Acceso a aula:');
+        console.log(`  TutoriaId: ${tutoriaId}`);
+        console.log(`  Usuario ID: ${req.user.userId}`);
+        console.log(`  Usuario rol: ${req.user.rol}`);
+        console.log(`  Tutor ID: ${tutoria.tutor._id.toString()}`);
+        console.log(`  Es tutor: ${esTutor}`);
+        console.log(`  Es estudiante aceptado: ${esEstudianteAceptado}`);
+        console.log(`  Motivo rechazo: ${motivoRechazo}`);
 
         if (!esTutor && !esEstudianteAceptado) {
             return res.status(403).json({
                 success: false,
-                message: 'No tienes acceso a esta aula'
+                message: motivoRechazo || 'No tienes acceso a esta aula'
             });
         }
 
@@ -198,6 +225,7 @@ router.get('/:tutoriaId', requireAuth, async (req, res) => {
         });
 
     } catch (error) {
+        console.error('Error en GET /api/aula/:tutoriaId:', error);
         res.status(500).json({
             success: false,
             message: 'Error al obtener información del aula',

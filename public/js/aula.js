@@ -6,6 +6,58 @@
 let tutoriaId = null;
 let esTutor = false;
 
+// Función para generar los links del navbar según el rol
+function generarLinksNavegacion(usuario) {
+    const navLinks = document.getElementById('nav-links');
+    if (!navLinks) return;
+
+    let html = `
+        <a href="#" onclick="irAlDashboard(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">← Regresar</a>
+    `;
+
+    if (usuario.rol === 'Estudiante') {
+        html += `
+            <a href="#" onclick="mostrarVistaTutorias(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Consultar Tutorías</a>
+            <a href="#" onclick="mostrarVistaSolicitudes(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Ver Solicitudes</a>
+        `;
+    } else if (usuario.rol === 'Tutor') {
+        html += `
+            <a href="#" onclick="mostrarVistaRegistro(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Registrar Tutoría</a>
+            <a href="#" onclick="mostrarVistaTutorias(); return false;" class="text-gray-700 hover:text-gray-900 font-medium">Tutorías Creadas</a>
+        `;
+    }
+
+    html += `<span class="text-gray-700 font-medium">Aula Virtual</span>`;
+
+    navLinks.innerHTML = html;
+}
+
+// Función para ir al dashboard
+function irAlDashboard() {
+    if (esTutor) {
+        window.location.href = '/tutor.html';
+    } else {
+        window.location.href = '/estudiante.html';
+    }
+}
+
+// Funciones placeholder para navegación (pueden no estar disponibles desde aula.html)
+function mostrarVistaTutorias() {
+    if (esTutor) {
+        window.location.href = '/tutor.html#tutorias';
+    } else {
+        window.location.href = '/estudiante.html#tutorias';
+    }
+}
+
+function mostrarVistaSolicitudes() {
+    window.location.href = '/estudiante.html#solicitudes';
+}
+
+function mostrarVistaRegistro() {
+    window.location.href = '/tutor.html#registro';
+}
+
 // Función para mostrar mensajes en pantalla
 function mostrarMensaje(texto, tipo = 'success') {
     const mensajeDiv = document.getElementById('mensaje-alerta');
@@ -83,6 +135,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (loadingScreen) loadingScreen.classList.add('hidden');
     if (mainContent) mainContent.classList.remove('hidden');
 
+    // Generar links del navbar según el rol
+    generarLinksNavegacion(sesion);
+
     // Inicializar tabs
     initializeTabs();
 
@@ -99,18 +154,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
         btnLogout.addEventListener('click', cerrarSesion);
-    }
-
-    // Botón volver
-    const btnVolver = document.getElementById('btn-volver');
-    if (btnVolver) {
-        btnVolver.addEventListener('click', () => {
-            if (sesion.rol === 'Tutor') {
-                window.location.href = '/tutor';
-            } else if (sesion.rol === 'Estudiante') {
-                window.location.href = '/estudiante';
-            }
-        });
     }
 
     // Cargar información del aula
@@ -194,43 +237,61 @@ function initializeTabs() {
 async function cargarAulaInfo() {
     try {
         const response = await APIClient.getAulaInfo(tutoriaId);
+        console.log('Respuesta del backend:', response);
         const { tutoria, esTutor: esTutorResponse } = response;
         
         esTutor = esTutorResponse;
+        console.log('Tutoría data:', tutoria);
+        console.log('Es tutor:', esTutor);
 
         // Mostrar nombre legible de la materia
         const materiaNombre = tutoria.materiaNombre || tutoria.materia?.nombre || tutoria.materia || '[Sin materia]';
-        document.getElementById('nombre-tutoria').textContent = `Aula: ${materiaNombre}`;
-        document.getElementById('titulo-aula').textContent = `Aula Virtual: Aula de ${materiaNombre.toUpperCase()}`;
+        
+        // Actualizar título de la página
+        const tituloAula = document.getElementById('titulo-aula');
+        if (tituloAula) {
+            tituloAula.textContent = `Aula Virtual: ${materiaNombre}`;
+        }
 
         // Actualizar información de la tutoría
-        document.getElementById('info-materia').textContent = materiaNombre;
+        const infoMateria = document.getElementById('info-materia');
+        if (infoMateria) {
+            infoMateria.textContent = materiaNombre;
+        }
         
         // Mostrar modalidad
         const modalidad = tutoria.modalidadAula || 'No configurada';
-        document.getElementById('info-modalidad').textContent = modalidad;
+        const infoModalidad = document.getElementById('info-modalidad');
+        if (infoModalidad) {
+            infoModalidad.textContent = modalidad;
+        }
         
         // Mostrar aula o enlace según modalidad
+        const infoAulaContainer = document.getElementById('info-aula-container');
+        const infoEnlaceContainer = document.getElementById('info-enlace-container');
+        
         if (tutoria.modalidadAula === 'Presencial') {
-            document.getElementById('info-aula-container').classList.remove('hidden');
-            document.getElementById('info-enlace-container').classList.add('hidden');
-            document.getElementById('info-aula').textContent = tutoria.nombreAula || '-';
+            if (infoAulaContainer) infoAulaContainer.classList.remove('hidden');
+            if (infoEnlaceContainer) infoEnlaceContainer.classList.add('hidden');
+            const infoAula = document.getElementById('info-aula');
+            if (infoAula) infoAula.textContent = tutoria.nombreAula || '-';
         } else if (tutoria.modalidadAula === 'Virtual') {
-            document.getElementById('info-aula-container').classList.add('hidden');
-            document.getElementById('info-enlace-container').classList.remove('hidden');
+            if (infoAulaContainer) infoAulaContainer.classList.add('hidden');
+            if (infoEnlaceContainer) infoEnlaceContainer.classList.remove('hidden');
             const linkReunion = document.getElementById('link-reunion');
-            if (tutoria.enlaceReunion) {
+            if (linkReunion && tutoria.enlaceReunion) {
                 linkReunion.href = tutoria.enlaceReunion;
                 linkReunion.textContent = 'Ir a la reunión';
                 linkReunion.className = 'bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition inline-block';
-            } else {
+            } else if (linkReunion) {
                 linkReunion.textContent = '-';
             }
         } else {
             // No configurada
-            document.getElementById('info-aula-container').classList.remove('hidden');
-            document.getElementById('info-enlace-container').classList.add('hidden');
-            document.getElementById('info-aula').textContent = '-';
+            if (infoAulaContainer) infoAulaContainer.classList.remove('hidden');
+            if (infoEnlaceContainer) infoEnlaceContainer.classList.add('hidden');
+            const infoAula = document.getElementById('info-aula');
+            if (infoAula) infoAula.textContent = '-';
         }
         
         // Formatear fecha y horario
@@ -241,29 +302,43 @@ async function cargarAulaInfo() {
             year: 'numeric'
         });
         const horario = `${tutoria.horaInicio} - ${tutoria.horaFin} del ${fechaFormateada}`;
-        document.getElementById('info-horario').textContent = horario;
+        const infoHorario = document.getElementById('info-horario');
+        if (infoHorario) {
+            infoHorario.textContent = horario;
+        }
         
-        document.getElementById('info-tutor').textContent = tutoria.tutorNombre;
+        const infoTutor = document.getElementById('info-tutor');
+        if (infoTutor) {
+            infoTutor.textContent = tutoria.tutorNombre;
+        }
 
         // Mostrar formularios solo si es tutor
         if (esTutor) {
-            document.getElementById('form-nueva-publicacion').classList.remove('hidden');
-            document.getElementById('form-subir-bibliografia').classList.remove('hidden');
+            const formPublicacion = document.getElementById('form-nueva-publicacion');
+            const formBibliografia = document.getElementById('form-subir-bibliografia');
+            if (formPublicacion) formPublicacion.classList.remove('hidden');
+            if (formBibliografia) formBibliografia.classList.remove('hidden');
             
             // Mostrar botón de configurar si no está configurada, o botón de editar si ya está configurada
+            const btnConfigurar = document.getElementById('btn-configurar-aula');
+            const btnEditar = document.getElementById('btn-editar-configuracion-aula');
+            
             if (!tutoria.aulaConfigurada) {
-                document.getElementById('btn-configurar-aula').classList.remove('hidden');
-                document.getElementById('btn-editar-configuracion-aula').classList.add('hidden');
+                if (btnConfigurar) btnConfigurar.classList.remove('hidden');
+                if (btnEditar) btnEditar.classList.add('hidden');
             } else {
-                document.getElementById('btn-configurar-aula').classList.add('hidden');
-                document.getElementById('btn-editar-configuracion-aula').classList.remove('hidden');
+                if (btnConfigurar) btnConfigurar.classList.add('hidden');
+                if (btnEditar) btnEditar.classList.remove('hidden');
             }
         }
 
     } catch (error) {
         console.error('Error al cargar información del aula:', error);
-        alert('No tienes acceso a esta aula');
-        window.location.href = '/';
+        console.error('Stack:', error.stack);
+        mostrarMensaje(`Error: ${error.message}`, 'error');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 2000);
     }
 }
 

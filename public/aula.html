@@ -35,19 +35,19 @@
     <!-- Main Content -->
     <div id="main-content" class="hidden">
         <!-- Navbar -->
-        <nav class="bg-gray-100 shadow-sm border-b border-gray-200">
+        <nav class="bg-white shadow-sm border-b border-gray-200">
             <div class="px-6 py-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-8">
-                        <a class="text-xl font-semibold text-gray-800" href="#" id="nombre-tutoria">Aula Virtual</a>
-                        <div class="hidden md:flex">
-                            <a class="text-gray-700 hover:text-gray-900 font-medium" href="#" id="btn-volver">Volver</a>
+                        <a href="#" id="logo-link" class="text-xl font-semibold text-gray-800">Tutorías FIS</a>
+                        <div class="hidden md:flex space-x-6" id="nav-links">
+                            <!-- Se generará dinámicamente según el rol -->
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
                         <span class="text-gray-700 text-sm font-medium" id="usuario-nombre"></span>
                         <button id="btn-logout" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md text-sm font-medium transition">
-                            Cerrar Sesión
+                            Sign Out
                         </button>
                     </div>
                 </div>
