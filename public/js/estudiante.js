@@ -373,41 +373,66 @@ async function abrirModalEncuesta(tutoriaId, materia) {
     titulo.textContent = `Formulario de calificación - ${materia}`;
     
     let html = `
-        <p class="text-center mb-6 text-gray-600">
-            Por favor responde las siguientes preguntas
-        </p>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p class="text-center text-gray-700 font-medium">
+                Por favor califica tu experiencia en esta tutoría
+            </p>
+            <p class="text-center text-sm text-gray-600 mt-2">
+                Todas las preguntas son obligatorias
+            </p>
+        </div>
     `;
     
-        preguntas.forEach(pregunta => {
+        preguntas.forEach((pregunta, index) => {
             html += `
-                <div class="mb-6 pb-4 border-b border-gray-200">
-                    <p class="font-semibold text-gray-800 mb-3">${pregunta.pregunta}</p>
-                    <div class="space-y-2">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
-                                   id="pregunta-${pregunta._id}-1" value="1">
-                            <span class="text-gray-700">1 - Muy insatisfecho</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
-                                   id="pregunta-${pregunta._id}-2" value="2">
-                            <span class="text-gray-700">2 - Insatisfecho</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
-                                   id="pregunta-${pregunta._id}-3" value="3">
-                            <span class="text-gray-700">3 - Neutral</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
-                                   id="pregunta-${pregunta._id}-4" value="4">
-                            <span class="text-gray-700">4 - Satisfecho</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input class="form-radio text-blue-500" type="radio" name="pregunta-${pregunta._id}" 
-                                   id="pregunta-${pregunta._id}-5" value="5">
-                            <span class="text-gray-700">5 - Muy satisfecho</span>
-                        </label>
+                <div class="mb-8 p-5 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                    <div class="flex items-start mb-4">
+                        <span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold mr-3">${index + 1}</span>
+                        <p class="font-semibold text-gray-800 text-lg flex-1 pt-1">${pregunta.pregunta}</p>
+                    </div>
+                    <div class="ml-11 space-y-3">
+                        <div class="grid grid-cols-1 gap-2">
+                            <label class="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-white hover:border-blue-400 cursor-pointer transition-all group">
+                                <input class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                       id="pregunta-${pregunta._id}-1" value="1">
+                                <div class="flex items-center justify-between flex-1">
+                                    <span class="text-gray-700 font-medium group-hover:text-blue-600">1 - Muy insatisfecho</span>
+                                    <span class="text-2xl">😞</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-white hover:border-blue-400 cursor-pointer transition-all group">
+                                <input class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                       id="pregunta-${pregunta._id}-2" value="2">
+                                <div class="flex items-center justify-between flex-1">
+                                    <span class="text-gray-700 font-medium group-hover:text-blue-600">2 - Insatisfecho</span>
+                                    <span class="text-2xl">🙁</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-white hover:border-blue-400 cursor-pointer transition-all group">
+                                <input class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                       id="pregunta-${pregunta._id}-3" value="3">
+                                <div class="flex items-center justify-between flex-1">
+                                    <span class="text-gray-700 font-medium group-hover:text-blue-600">3 - Neutral</span>
+                                    <span class="text-2xl">😐</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-white hover:border-blue-400 cursor-pointer transition-all group">
+                                <input class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                       id="pregunta-${pregunta._id}-4" value="4">
+                                <div class="flex items-center justify-between flex-1">
+                                    <span class="text-gray-700 font-medium group-hover:text-blue-600">4 - Satisfecho</span>
+                                    <span class="text-2xl">🙂</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-white hover:border-blue-400 cursor-pointer transition-all group">
+                                <input class="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500" type="radio" name="pregunta-${pregunta._id}" 
+                                       id="pregunta-${pregunta._id}-5" value="5">
+                                <div class="flex items-center justify-between flex-1">
+                                    <span class="text-gray-700 font-medium group-hover:text-blue-600">5 - Muy satisfecho</span>
+                                    <span class="text-2xl">😊</span>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </div>
             `;

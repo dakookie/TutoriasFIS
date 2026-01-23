@@ -412,6 +412,8 @@ async function cargarMateriasEncuesta() {
     try {
         const materias = await APIClient.obtenerMaterias();
         const select = document.getElementById('materia-encuesta');
+        const filtroSelect = document.getElementById('filtro-materia-preguntas');
+        
         select.innerHTML = '<option value="">Selecciona una materia</option>';
 
         materias.forEach(materia => {
@@ -422,7 +424,36 @@ async function cargarMateriasEncuesta() {
             select.appendChild(option);
         });
 
-        // Event listener para cargar preguntas al cambiar materia
+        // Llenar también el filtro de materias
+        if (filtroSelect) {
+            filtroSelect.innerHTML = '<option value="">Todas las materias</option>';
+            materias.forEach(materia => {
+                const option = document.createElement('option');
+                option.value = materia._id;
+                option.textContent = materia.nombre;
+                filtroSelect.appendChild(option);
+            });
+            
+            // Event listener para filtrar preguntas
+            filtroSelect.addEventListener('change', async function () {
+                if (this.value) {
+                    await cargarPreguntasGuardadas(this.value);
+                } else {
+                    await cargarPreguntasGuardadas();
+                }
+            });
+        }
+
+        // Event listener para limpiar filtro
+        const btnLimpiarFiltro = document.getElementById('btn-limpiar-filtro');
+        if (btnLimpiarFiltro) {
+            btnLimpiarFiltro.addEventListener('click', async function () {
+                filtroSelect.value = '';
+                await cargarPreguntasGuardadas();
+            });
+        }
+
+        // Event listener para cargar preguntas al cambiar materia en el selector de crear pregunta
         select.addEventListener('change', async function () {
             if (this.value) {
                 await cargarPreguntasGuardadas(this.value);
@@ -432,13 +463,21 @@ async function cargarMateriasEncuesta() {
         console.error('Error al cargar materias:', error);
         const mensaje = document.getElementById('mensaje-encuesta');
         if (mensaje) {
-            mensaje.className = 'alert alert-danger mt-3';
+            mensaje.className = 'mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
             mensaje.textContent = 'Error al cargar las materias';
-            mensaje.style.display = 'block';
+            mensaje.classList.remove('hidden');
         }
     }
 
     // Event listener para guardar pregunta
+    const btnGuardar = document.getElementById('btn-guardar-pregunta');
+    if (btnGuardar) {
+        btnGuardar.addEventListener('click', async function (e) {
+            e.preventDefault();
+            await guardarPregunta();
+        });
+    }
+
     const form = document.getElementById('form-crear-pregunta');
     if (form) {
         form.addEventListener('submit', async function (e) {
@@ -455,9 +494,9 @@ async function guardarPregunta() {
 
     if (!pregunta || !materia) {
         if (mensaje) {
-            mensaje.className = 'alert alert-danger mt-3';
+            mensaje.className = 'mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
             mensaje.textContent = 'Por favor, completa todos los campos';
-            mensaje.style.display = 'block';
+            mensaje.classList.remove('hidden');
         }
         return;
     }
@@ -466,23 +505,23 @@ async function guardarPregunta() {
         await APIClient.crearPregunta(pregunta, materia);
 
         if (mensaje) {
-            mensaje.className = 'alert alert-success mt-3';
+            mensaje.className = 'mt-3 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
             mensaje.textContent = 'Pregunta guardada exitosamente';
-            mensaje.style.display = 'block';
+            mensaje.classList.remove('hidden');
         }
 
         document.getElementById('pregunta-encuesta').value = '';
         await cargarPreguntasGuardadas(materia);
 
         setTimeout(() => {
-            if (mensaje) mensaje.style.display = 'none';
+            if (mensaje) mensaje.classList.add('hidden');
         }, 3000);
     } catch (error) {
         console.error('Error al crear pregunta:', error);
         if (mensaje) {
-            mensaje.className = 'alert alert-danger mt-3';
+            mensaje.className = 'mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
             mensaje.textContent = 'Error al guardar pregunta: ' + error.message;
-            mensaje.style.display = 'block';
+            mensaje.classList.remove('hidden');
         }
     }
 }
@@ -504,39 +543,73 @@ async function cargarPreguntasGuardadas(materia = null) {
 
         if (preguntas.length === 0) {
             container.innerHTML = materia
-                ? `<div class="alert alert-info text-center">No hay preguntas guardadas para ${materia}</div>`
-                : '<div class="alert alert-info text-center">No hay preguntas guardadas aún.</div>';
+                ? `<div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded text-center">
+                     No hay preguntas guardadas para esta materia
+                   </div>`
+                : `<div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded text-center">
+                     No hay preguntas guardadas aún
+                   </div>`;
             return;
         }
 
-        let html = materia ? `<h5 class="mb-3">Preguntas Guardadas para ${materia}</h5>` : '';
-        html += `
-            <table class="table table-striped table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Pregunta</th>
-                        <th>Materia</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+        // Agrupar preguntas por materia
+        const preguntasPorMateria = {};
+        preguntas.forEach(pregunta => {
+            const materiaNombre = pregunta.materiaNombre || pregunta.materia;
+            if (!preguntasPorMateria[materiaNombre]) {
+                preguntasPorMateria[materiaNombre] = [];
+            }
+            preguntasPorMateria[materiaNombre].push(pregunta);
+        });
 
-        preguntas.forEach((pregunta, index) => {
+        let html = '';
+        
+        Object.keys(preguntasPorMateria).sort().forEach(materiaNombre => {
+            const preguntasMateria = preguntasPorMateria[materiaNombre];
+            
             html += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${pregunta.pregunta}</td>
-                    <td><span class="badge bg-primary">${pregunta.materiaNombre || pregunta.materia}</span></td>
-                </tr>
+                <div class="mb-6 border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3">
+                        <h4 class="text-white font-semibold flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            ${materiaNombre}
+                            <span class="ml-2 bg-white text-blue-600 px-2 py-1 rounded-full text-xs font-bold">
+                                ${preguntasMateria.length} ${preguntasMateria.length === 1 ? 'pregunta' : 'preguntas'}
+                            </span>
+                        </h4>
+                    </div>
+                    <div class="bg-white">
+            `;
+            
+            preguntasMateria.forEach((pregunta, index) => {
+                html += `
+                    <div class="px-4 py-3 ${index > 0 ? 'border-t border-gray-200' : ''} hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start">
+                            <span class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold text-sm mr-3">
+                                ${index + 1}
+                            </span>
+                            <p class="text-gray-800 flex-1 pt-1">${pregunta.pregunta}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
             `;
         });
 
-        html += '</tbody></table>';
         container.innerHTML = html;
 
     } catch (error) {
         console.error('Error al cargar preguntas:', error);
-        container.innerHTML = '<div class="alert alert-danger">Error al cargar preguntas</div>';
+        container.innerHTML = `
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                <strong>Error:</strong> No se pudieron cargar las preguntas
+            </div>
+        `;
     }
 }
