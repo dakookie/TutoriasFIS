@@ -25,7 +25,7 @@ export class SolicitudesController {
   @Post()
   @Roles('Estudiante')
   async crear(@Body() createDto: CreateSolicitudDto, @Request() req) {
-    const solicitud = await this.solicitudesService.crear(createDto, req.user.userId);
+    const solicitud = await this.solicitudesService.crear(createDto, req.user.userId.toString());
     return {
       ok: true,
       solicitud,
@@ -45,7 +45,7 @@ export class SolicitudesController {
   @Get('mis-solicitudes')
   @Roles('Estudiante')
   async getMisSolicitudes(@Request() req) {
-    const solicitudes = await this.solicitudesService.findByEstudiante(req.user.userId);
+    const solicitudes = await this.solicitudesService.findByEstudiante(req.user.userId.toString());
     return {
       ok: true,
       solicitudes,
@@ -55,7 +55,7 @@ export class SolicitudesController {
   @Get('pendientes')
   @Roles('Tutor')
   async getPendientes(@Request() req) {
-    const solicitudes = await this.solicitudesService.findPendientesByTutor(req.user.userId);
+    const solicitudes = await this.solicitudesService.findPendientesByTutor(req.user.userId.toString());
     return {
       ok: true,
       solicitudes,
@@ -96,7 +96,7 @@ export class SolicitudesController {
   async aprobar(@Param('id') id: string, @Request() req) {
     const solicitud = await this.solicitudesService.aprobar(
       id,
-      req.user.userId,
+      req.user.userId.toString(),
       req.user.rol,
     );
     return {
@@ -129,7 +129,7 @@ export class SolicitudesController {
   ) {
     const solicitud = await this.solicitudesService.rechazar(
       id,
-      req.user.userId,
+      req.user.userId.toString(),
       req.user.rol,
       motivo,
     );
@@ -154,7 +154,7 @@ export class SolicitudesController {
   @Patch(':id/cancelar')
   @Roles('Estudiante')
   async cancelar(@Param('id') id: string, @Request() req) {
-    const solicitud = await this.solicitudesService.cancelar(id, req.user.userId);
+    const solicitud = await this.solicitudesService.cancelar(id, req.user.userId.toString());
     return {
       ok: true,
       solicitud,
@@ -164,7 +164,7 @@ export class SolicitudesController {
 
   @Delete(':id')
   async eliminar(@Param('id') id: string, @Request() req) {
-    await this.solicitudesService.eliminar(id, req.user.userId);
+    await this.solicitudesService.eliminar(id, req.user.userId.toString());
     return {
       ok: true,
       mensaje: 'Solicitud eliminada correctamente',

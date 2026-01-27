@@ -39,7 +39,11 @@ export class AulaService {
       throw new NotFoundException('Tutoría no encontrada');
     }
 
-    const esTutor = tutoria.tutor._id.toString() === userId.toString();
+    // Convertir IDs a string para comparar correctamente
+    const userIdString = userId.toString();
+    const tutorIdString = tutoria.tutor._id.toString();
+    
+    const esTutor = tutorIdString === userIdString;
     let esEstudiante = false;
 
     if (userRol === 'Estudiante') {

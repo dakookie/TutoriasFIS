@@ -158,12 +158,13 @@ export class SolicitudesService {
   async aprobar(id: string, userId: string, userRol: string): Promise<SolicitudDocument> {
     const solicitud = await this.findById(id);
 
-    // Verificar permisos
+    // Verificar permisos - convertir todos los IDs a string para comparar
     const tutorId = (solicitud.tutoria as any).tutor?._id?.toString() || 
                    (solicitud.tutoria as any).tutor?.toString();
+    const userIdString = userId.toString();
     
     const esAdmin = userRol === 'Administrador' || userRol === 'admin';
-    const esTutor = tutorId === userId;
+    const esTutor = tutorId === userIdString;
     
     if (!esAdmin && !esTutor) {
       throw new ForbiddenException('No tienes permiso para aprobar esta solicitud');
@@ -204,19 +205,27 @@ export class SolicitudesService {
   ): Promise<SolicitudDocument> {
     const solicitud = await this.findById(id);
 
-    // Verificar permisos
+    // Verificar permisos - convertir IDs a string para comparar
     const tutorId = (solicitud.tutoria as any).tutor?._id?.toString() || 
                    (solicitud.tutoria as any).tutor?.toString();
+    const userIdString = userId.toString();
     
     const esAdmin = userRol === 'Administrador' || userRol === 'admin';
-    const esTutor = tutorId === userId;
+    const esTutor = tutorId === userIdString;
     
     if (!esAdmin && !esTutor) {
       throw new ForbiddenException('No tienes permiso para rechazar esta solicitud');
     }
 
-    if (solicitud.estado !== EstadoSolicitud.PENDIENTE) {
-      throw new BadRequestException('Solo se pueden rechazar solicitudes pendientes');
+    // Permitir rechazar solicitudes Pendientes o Aceptadas (revocar acceso)
+    if (solicitud.estado === EstadoSolicitud.RECHAZADA) {
+      throw new BadRequestException('Esta solicitud ya fue rechazada');
+    }
+
+    // Si estaba aceptada, decrementar inscritos
+    if (solicitud.estado === EstadoSolicitud.ACEPTADA) {
+      const tutoriaId = (solicitud.tutoria as any)._id?.toString();
+      await this.tutoriasService.decrementarInscritos(tutoriaId);
     }
 
     const updateData: any = { estado: EstadoSolicitud.RECHAZADA };
@@ -246,11 +255,12 @@ export class SolicitudesService {
   async cancelar(id: string, estudianteId: string): Promise<SolicitudDocument> {
     const solicitud = await this.findById(id);
 
-    // Verificar que el estudiante es el dueño
+    // Verificar que el estudiante es el dueño - convertir IDs a string
     const solicitanteId = (solicitud.estudiante as any)._id?.toString() || 
                          solicitud.estudiante.toString();
+    const estudianteIdString = estudianteId.toString();
     
-    if (solicitanteId !== estudianteId) {
+    if (solicitanteId !== estudianteIdString) {
       throw new ForbiddenException('No tienes permiso para cancelar esta solicitud');
     }
 

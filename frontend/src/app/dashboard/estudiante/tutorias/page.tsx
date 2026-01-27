@@ -146,12 +146,18 @@ export default function TutoriasDisponiblesPage() {
 
   // Verificar si el usuario ya tiene una solicitud para una tutoría
   const tieneSolicitud = (tutoriaId: string) => {
-    return solicitudes.some(sol => sol.tutoria._id === tutoriaId);
+    return solicitudes.some(sol => {
+      const solTutoriaId = sol.tutoria?._id || sol.tutoria;
+      return solTutoriaId === tutoriaId;
+    });
   };
 
   // Obtener el estado de la solicitud para una tutoría
   const getEstadoSolicitud = (tutoriaId: string) => {
-    const solicitud = solicitudes.find(sol => sol.tutoria._id === tutoriaId);
+    const solicitud = solicitudes.find(sol => {
+      const solTutoriaId = sol.tutoria?._id || sol.tutoria;
+      return solTutoriaId === tutoriaId;
+    });
     return solicitud?.estado;
   };
 
