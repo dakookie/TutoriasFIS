@@ -12,6 +12,7 @@ import { Input, Button, Alert, Card, CardContent, CardHeader, CardTitle } from '
 export default function ForgotPasswordPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [devToken, setDevToken] = useState<string | null>(null);
 
   const {
     register,
@@ -29,6 +30,11 @@ export default function ForgotPasswordPage() {
     
     if (response.success) {
       setSuccess(true);
+      // En desarrollo, el backend devuelve el token directamente
+      const token = (response as any).resetToken || (response.data as any)?.resetToken;
+      if (token) {
+        setDevToken(token);
+      }
     } else {
       setApiError(response.message || 'Error al procesar la solicitud');
     }
@@ -43,9 +49,31 @@ export default function ForgotPasswordPage() {
               <Mail className="h-8 w-8 text-blue-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Revisa tu correo</h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Si existe una cuenta con ese email, recibirás un enlace para restablecer tu contraseña.
             </p>
+            
+            {/* Token de desarrollo - Solo visible en modo desarrollo */}
+            {devToken && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-left">
+                <p className="text-yellow-800 font-semibold text-sm mb-2">
+                  ⚠️ MODO DESARROLLO
+                </p>
+                <p className="text-yellow-700 text-xs mb-2">
+                  Token de reseteo:
+                </p>
+                <code className="block bg-yellow-100 p-2 rounded text-xs break-all mb-3">
+                  {devToken}
+                </code>
+                <Link 
+                  href={`/reset-password/${devToken}`}
+                  className="inline-block w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Hacer clic aquí para resetear contraseña
+                </Link>
+              </div>
+            )}
+
             <Link href="/login">
               <Button variant="outline" className="w-full">
                 Volver al Login

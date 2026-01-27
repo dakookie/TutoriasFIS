@@ -62,18 +62,34 @@ export default function SolicitudesEstudiantePage() {
       setSolicitudes(response.data);
       // Verificar calificaciones para cada solicitud aceptada
       const aceptadas = response.data.filter((s: Solicitud) => s.estado === 'Aceptada');
+      const calificacionesMap: Record<string, boolean> = {};
+      
       for (const sol of aceptadas) {
-        const tutoriaId = sol.tutoria?._id || '';
+        const tutoriaId = getTutoriaIdFromSolicitud(sol);
         if (tutoriaId) {
-          const verificar = await api.verificarRespuesta(tutoriaId);
-          const data = verificar.data as { respondido?: boolean } | undefined;
-          setCalificaciones(prev => ({ ...prev, [tutoriaId]: data?.respondido || false }));
+          try {
+            const verificar = await api.verificarRespuesta(tutoriaId);
+            // El backend devuelve { respondido: boolean } directamente, no en .data
+            const respondido = (verificar as any).respondido ?? (verificar.data as any)?.respondido ?? false;
+            calificacionesMap[tutoriaId] = respondido;
+          } catch (err) {
+            calificacionesMap[tutoriaId] = false;
+          }
         }
       }
+      setCalificaciones(calificacionesMap);
     } else {
       setError('Error al cargar solicitudes');
     }
     setIsLoading(false);
+  };
+  
+  // Helper para obtener tutoriaId de solicitud (usado antes de definir getTutoriaId)
+  const getTutoriaIdFromSolicitud = (sol: Solicitud): string => {
+    if (typeof sol.tutoria === 'string') {
+      return sol.tutoria;
+    }
+    return sol.tutoria?._id || '';
   };
 
   useEffect(() => {
