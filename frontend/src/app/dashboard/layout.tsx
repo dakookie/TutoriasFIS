@@ -62,13 +62,13 @@ const navItems: NavItem[] = [
   // Admin
   {
     label: 'Solicitudes Tutores',
-    href: '/dashboard/admin/tutores',
+    href: '/dashboard/admin?view=tutores',
     icon: <UserCheck className="h-5 w-5" />,
     roles: ['Administrador'],
   },
   {
     label: 'Solicitudes Estudiantes',
-    href: '/dashboard/admin/estudiantes',
+    href: '/dashboard/admin?view=estudiantes',
     icon: <Users className="h-5 w-5" />,
     roles: ['Administrador'],
   },

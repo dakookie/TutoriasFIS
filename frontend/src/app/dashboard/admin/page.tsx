@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api/client';
 import { UserCheck, UserX, Users, FileText, ChevronLeft } from 'lucide-react';
@@ -25,6 +25,7 @@ interface Usuario {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
   const [solicitudesTutores, setSolicitudesTutores] = useState<Usuario[]>([]);
   const [solicitudesEstudiantes, setSolicitudesEstudiantes] = useState<Usuario[]>([]);
@@ -67,6 +68,14 @@ export default function AdminDashboardPage() {
 
     fetchData();
   }, [user, authLoading, router]);
+
+  // Detectar cambio en query params y actualizar vista
+  useEffect(() => {
+    const view = searchParams.get('view');
+    if (view === 'tutores' || view === 'estudiantes') {
+      setActiveView(view);
+    }
+  }, [searchParams]);
 
   const handleAprobar = async (id: string) => {
     setActionLoading(id);
