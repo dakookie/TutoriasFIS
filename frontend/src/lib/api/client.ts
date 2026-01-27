@@ -280,7 +280,7 @@ class ApiClient {
     fecha: string;
     horaInicio: string;
     horaFin: string;
-    cupos: number;
+    cuposOriginales: number;
     activa: boolean;
     publicada: boolean;
   }>) {
@@ -303,14 +303,16 @@ class ApiClient {
     });
   }
 
-  // Publicar una tutoría (cambiar estado a publicada)
+  // Publicar/Despublicar una tutoría (alterna el estado)
   async publicarTutoria(tutoriaId: string) {
-    return this.actualizarTutoria(tutoriaId, { publicada: true });
+    return this.request(`/api/tutorias/${tutoriaId}/publicar`, {
+      method: 'PATCH',
+    });
   }
 
   // Despublicar una tutoría
   async despublicarTutoria(tutoriaId: string) {
-    return this.actualizarTutoria(tutoriaId, { publicada: false });
+    return this.publicarTutoria(tutoriaId); // Usa el mismo endpoint que alterna el estado
   }
 
   // ==================== SOLICITUDES ====================
@@ -339,16 +341,27 @@ class ApiClient {
     return this.request(`/api/solicitudes/tutoria/${tutoriaId}`);
   }
 
-  async aprobarSolicitud(solicitudId: string) {
-    return this.request(`/api/solicitudes/${solicitudId}/aprobar`, {
-      method: 'PATCH',
+  // Alias para compatibilidad
+  async getSolicitudesTutoria(tutoriaId: string) {
+    return this.getSolicitudesPorTutoria(tutoriaId);
+  }
+
+  async aceptarSolicitud(solicitudId: string) {
+    return this.request(`/api/solicitudes/${solicitudId}/aceptar`, {
+      method: 'PUT',
     });
   }
 
   async rechazarSolicitud(solicitudId: string, motivo?: string) {
     return this.request(`/api/solicitudes/${solicitudId}/rechazar`, {
-      method: 'PATCH',
+      method: 'PUT',
       body: JSON.stringify({ motivo }),
+    });
+  }
+
+  async aprobarSolicitud(solicitudId: string) {
+    return this.request(`/api/solicitudes/${solicitudId}/aprobar`, {
+      method: 'PATCH',
     });
   }
 

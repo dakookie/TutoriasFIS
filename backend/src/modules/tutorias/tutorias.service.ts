@@ -139,9 +139,13 @@ export class TutoriasService {
   ): Promise<TutoriaDocument> {
     const tutoria = await this.findById(id);
 
-    // Verificar permisos
+    // Verificar permisos - convertir ambos a string
     const tutorId = (tutoria.tutor as any)._id?.toString() || tutoria.tutor.toString();
-    if (userRol !== 'admin' && tutorId !== userId) {
+    const userIdStr = userId.toString();
+    const esAdmin = userRol === 'Administrador' || userRol === 'admin';
+    const esDueno = tutorId === userIdStr;
+    
+    if (!esAdmin && !esDueno) {
       throw new ForbiddenException('No tienes permiso para modificar esta tutoría');
     }
 
@@ -166,14 +170,65 @@ export class TutoriasService {
   ): Promise<TutoriaDocument> {
     const tutoria = await this.findById(id);
 
-    // Verificar permisos
+    // Verificar permisos - convertir ambos a string
     const tutorId = (tutoria.tutor as any)._id?.toString() || tutoria.tutor.toString();
-    if (userRol !== 'admin' && tutorId !== userId) {
+    const userIdStr = userId.toString();
+    const esAdmin = userRol === 'Administrador' || userRol === 'admin';
+    const esDueno = tutorId === userIdStr;
+    
+    if (!esAdmin && !esDueno) {
       throw new ForbiddenException('No tienes permiso para modificar esta tutoría');
     }
 
     const updated = await this.tutoriaModel
       .findByIdAndUpdate(id, { activa: estado === 'activa' }, { new: true })
+      .populate('tutor', 'nombre email')
+      .populate('materia', 'nombre')
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException('Tutoría no encontrada');
+    }
+
+    return updated;
+  }
+
+  async togglePublicacion(
+    id: string, 
+    userId: string, 
+    userRol: string
+  ): Promise<TutoriaDocument> {
+    const tutoria = await this.findById(id);
+
+    // Verificar permisos - el tutor debe ser el dueño o ser administrador
+    const tutorId = (tutoria.tutor as any)._id?.toString() || (tutoria.tutor as any).toString();
+    
+    // Debug logs
+    console.log('=== togglePublicacion Debug ===');
+    console.log('tutoria.tutor:', tutoria.tutor);
+    console.log('tutorId extraído:', tutorId);
+    console.log('userId recibido:', userId);
+    console.log('userRol recibido:', userRol);
+    console.log('tutorId === userId:', tutorId === userId);
+    
+    const esAdmin = userRol === 'Administrador' || userRol === 'admin';
+    const esDueno = tutorId === userId;
+    
+    console.log('esAdmin:', esAdmin);
+    console.log('esDueno:', esDueno);
+    console.log('================================');
+    
+    if (!esAdmin && !esDueno) {
+      throw new ForbiddenException('No tienes permiso para publicar/despublicar esta tutoría');
+    }
+
+    // Alternar el estado de publicación
+    const updated = await this.tutoriaModel
+      .findByIdAndUpdate(
+        id, 
+        { publicada: !tutoria.publicada }, 
+        { new: true }
+      )
       .populate('tutor', 'nombre email')
       .populate('materia', 'nombre')
       .exec();
@@ -236,9 +291,13 @@ export class TutoriasService {
   async eliminar(id: string, userId: string, userRol: string): Promise<void> {
     const tutoria = await this.findById(id);
 
-    // Verificar permisos
+    // Verificar permisos - convertir ambos a string
     const tutorId = (tutoria.tutor as any)._id?.toString() || tutoria.tutor.toString();
-    if (userRol !== 'admin' && tutorId !== userId) {
+    const userIdStr = userId.toString();
+    const esAdmin = userRol === 'Administrador' || userRol === 'admin';
+    const esDueno = tutorId === userIdStr;
+    
+    if (!esAdmin && !esDueno) {
       throw new ForbiddenException('No tienes permiso para eliminar esta tutoría');
     }
 

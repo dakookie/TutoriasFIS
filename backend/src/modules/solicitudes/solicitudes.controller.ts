@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Delete,
   Patch,
   Body,
@@ -105,6 +106,20 @@ export class SolicitudesController {
     };
   }
 
+  // Alias para compatibilidad con el monolítico
+  @Patch(':id/aceptar')
+  @Roles('Tutor', 'Administrador')
+  async aceptar(@Param('id') id: string, @Request() req) {
+    return this.aprobar(id, req);
+  }
+
+  // Alias PUT para compatibilidad con frontend
+  @Put(':id/aceptar')
+  @Roles('Tutor', 'Administrador')
+  async aceptarPut(@Param('id') id: string, @Request() req) {
+    return this.aprobar(id, req);
+  }
+
   @Patch(':id/rechazar')
   @Roles('Tutor', 'Administrador')
   async rechazar(
@@ -123,6 +138,17 @@ export class SolicitudesController {
       solicitud,
       mensaje: 'Solicitud rechazada',
     };
+  }
+
+  // Alias para compatibilidad con el monolítico (método PUT)
+  @Put(':id/rechazar')
+  @Roles('Tutor', 'Administrador')
+  async rechazarPut(
+    @Param('id') id: string,
+    @Body('motivo') motivo: string,
+    @Request() req,
+  ) {
+    return this.rechazar(id, motivo, req);
   }
 
   @Patch(':id/cancelar')

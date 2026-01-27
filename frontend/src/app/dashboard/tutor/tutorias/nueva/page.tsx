@@ -50,8 +50,9 @@ export default function NuevaTutoriaPage() {
       const response = await api.getMaterias();
       if (response.success && Array.isArray(response.data)) {
         // Filtrar solo las materias que el tutor puede dar
+        // Comparar por nombre de materia ya que user.materias contiene nombres, no IDs
         const materiasDelTutor = response.data.filter((m: Materia) => 
-          user.materias?.includes(m._id)
+          user.materias?.includes(m.nombre)
         );
         setMaterias(materiasDelTutor);
       }

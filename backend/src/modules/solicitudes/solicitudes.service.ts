@@ -147,7 +147,10 @@ export class SolicitudesService {
     const tutorId = (solicitud.tutoria as any).tutor?._id?.toString() || 
                    (solicitud.tutoria as any).tutor?.toString();
     
-    if (userRol !== 'admin' && tutorId !== userId) {
+    const esAdmin = userRol === 'Administrador' || userRol === 'admin';
+    const esTutor = tutorId === userId;
+    
+    if (!esAdmin && !esTutor) {
       throw new ForbiddenException('No tienes permiso para aprobar esta solicitud');
     }
 
@@ -190,7 +193,10 @@ export class SolicitudesService {
     const tutorId = (solicitud.tutoria as any).tutor?._id?.toString() || 
                    (solicitud.tutoria as any).tutor?.toString();
     
-    if (userRol !== 'admin' && tutorId !== userId) {
+    const esAdmin = userRol === 'Administrador' || userRol === 'admin';
+    const esTutor = tutorId === userId;
+    
+    if (!esAdmin && !esTutor) {
       throw new ForbiddenException('No tienes permiso para rechazar esta solicitud');
     }
 

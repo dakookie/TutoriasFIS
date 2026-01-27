@@ -10,17 +10,25 @@ import {
   Query,
   UseGuards,
   Request,
+  NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { TutoriasService } from './tutorias.service';
 import { CreateTutoriaDto, UpdateTutoriaDto, FiltrosTutoriaDto } from './dto/tutoria.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Tutoria, TutoriaDocument } from './schemas/tutoria.schema';
 
 @Controller('tutorias')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TutoriasController {
-  constructor(private readonly tutoriasService: TutoriasService) {}
+  constructor(
+    private readonly tutoriasService: TutoriasService,
+    @InjectModel(Tutoria.name) private tutoriaModel: Model<TutoriaDocument>,
+  ) {}
 
   @Post()
   @Roles('Tutor', 'Administrador')
@@ -124,6 +132,28 @@ export class TutoriasController {
       ok: true,
       tutoria,
     };
+  }
+
+  @Patch(':id/publicar')
+  @Roles('Tutor', 'Administrador')
+  async publicarTutoria(@Param('id') id: string, @Request() req) {
+    const tutoria = await this.tutoriaModel.findById(id);
+    if (!tutoria) {
+      throw new NotFoundException('Tutoría no encontrada');
+    }
+
+    // Convertir ambos a string para comparar
+    const tutorId = tutoria.tutor.toString();
+    const userId = req.user.userId.toString();
+    
+    if (tutorId !== userId) {
+      throw new ForbiddenException('No tienes permiso para publicar esta tutoría');
+    }
+
+    tutoria.publicada = !tutoria.publicada;
+    await tutoria.save();
+
+    return { ok: true, success: true, tutoria };
   }
 
   @Delete(':id')
