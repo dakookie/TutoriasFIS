@@ -322,7 +322,7 @@ export default function TutoriasTutorPage() {
                       <td className="px-3 py-2 text-xs text-gray-700 text-center">{getCuposAceptados(tutoria._id)}</td>
                       <td className="px-3 py-2 text-center">
                         <button
-                          onClick={() => router.push(`/dashboard/tutor/aula/${tutoria._id}`)}
+                          onClick={() => router.push(`/aula/${tutoria._id}`)}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition"
                         >
                           Ir al Aula

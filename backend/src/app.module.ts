@@ -3,13 +3,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { APP_GUARD } from '@nestjs/core';
 
-// Modules
+// Modules - Updated with AulaModule for virtual classroom functionality
 import { AuthModule } from './modules/auth/auth.module';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { MateriasModule } from './modules/materias/materias.module';
 import { TutoriasModule } from './modules/tutorias/tutorias.module';
 import { SolicitudesModule } from './modules/solicitudes/solicitudes.module';
 import { MensajesModule } from './modules/mensajes/mensajes.module';
+import { AulaModule } from './modules/aula/aula.module';
 
 // Guards
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -39,6 +40,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     TutoriasModule,
     SolicitudesModule,
     MensajesModule,
+    AulaModule,
   ],
   controllers: [],
   providers: [

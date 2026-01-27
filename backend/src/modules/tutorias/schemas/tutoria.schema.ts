@@ -56,6 +56,9 @@ export class Tutoria {
   infoAdicionalAula?: string;
 
   @Prop({ default: false })
+  aulaConfigurada: boolean;
+
+  @Prop({ default: false })
   encuestaEnviada: boolean;
 }
 

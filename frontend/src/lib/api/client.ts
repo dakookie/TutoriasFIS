@@ -483,6 +483,76 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // ==================== AULA VIRTUAL ====================
+
+  async getAulaInfo(tutoriaId: string) {
+    return this.request(`/api/aula/${tutoriaId}`);
+  }
+
+  async configurarAula(tutoriaId: string, data: { modalidadAula: string; nombreAula?: string; enlaceReunion?: string }) {
+    return this.request(`/api/aula/${tutoriaId}/configurar`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async editarConfiguracionAula(tutoriaId: string, data: { modalidadAula: string; nombreAula?: string; enlaceReunion?: string }) {
+    return this.request(`/api/aula/${tutoriaId}/configurar`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Publicaciones
+  async getPublicaciones(tutoriaId: string) {
+    return this.request(`/api/aula/${tutoriaId}/publicaciones`);
+  }
+
+  async crearPublicacion(tutoriaId: string, data: { titulo: string; contenido: string; imagen?: string; tipoImagen?: string }) {
+    return this.request(`/api/aula/${tutoriaId}/publicaciones`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async editarPublicacion(tutoriaId: string, publicacionId: string, data: { titulo: string; contenido: string; imagen?: string; tipoImagen?: string }) {
+    return this.request(`/api/aula/${tutoriaId}/publicaciones/${publicacionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async eliminarPublicacion(tutoriaId: string, publicacionId: string) {
+    return this.request(`/api/aula/${tutoriaId}/publicaciones/${publicacionId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Bibliografías
+  async getBibliografias(tutoriaId: string) {
+    return this.request(`/api/aula/${tutoriaId}/bibliografias`);
+  }
+
+  async crearBibliografia(tutoriaId: string, data: { titulo: string; archivo: string; tipoArchivo: string; descripcion?: string }) {
+    return this.request(`/api/aula/${tutoriaId}/bibliografias`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async editarBibliografia(tutoriaId: string, bibliografiaId: string, data: { titulo: string }) {
+    return this.request(`/api/aula/${tutoriaId}/bibliografias/${bibliografiaId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async eliminarBibliografia(tutoriaId: string, bibliografiaId: string) {
+    return this.request(`/api/aula/${tutoriaId}/bibliografias/${bibliografiaId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Exportar instancia singleton
