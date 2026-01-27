@@ -70,16 +70,18 @@ export class UsuariosService {
   }
 
   async findTutores(): Promise<UsuarioDocument[]> {
+    // Las materias están guardadas como strings, no necesitan populate
     return this.usuarioModel
-      .find({ rol: 'tutor', activo: true })
+      .find({ rol: 'Tutor', activo: true })
       .select('-password')
       .sort({ nombre: 1 })
       .exec();
   }
 
   async findEstudiantes(): Promise<UsuarioDocument[]> {
+    // Las materias están guardadas como strings, no necesitan populate
     return this.usuarioModel
-      .find({ rol: 'estudiante', activo: true })
+      .find({ rol: 'Estudiante', activo: true })
       .select('-password')
       .sort({ nombre: 1 })
       .exec();
@@ -147,9 +149,9 @@ export class UsuariosService {
 
   async contarPorRol(): Promise<{ estudiantes: number; tutores: number; admins: number }> {
     const [estudiantes, tutores, admins] = await Promise.all([
-      this.usuarioModel.countDocuments({ rol: 'estudiante' }),
-      this.usuarioModel.countDocuments({ rol: 'tutor' }),
-      this.usuarioModel.countDocuments({ rol: 'admin' }),
+      this.usuarioModel.countDocuments({ rol: 'Estudiante' }),
+      this.usuarioModel.countDocuments({ rol: 'Tutor' }),
+      this.usuarioModel.countDocuments({ rol: 'Administrador' }),
     ]);
 
     return { estudiantes, tutores, admins };

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 
 export type UsuarioDocument = Usuario & Document;
@@ -30,8 +30,8 @@ export class Usuario {
   @Prop({ required: true, enum: Rol })
   rol: Rol;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Materia' }], default: [] })
-  materias: Types.ObjectId[];
+  @Prop([String])
+  materias: string[];
 
   @Prop({ default: false })
   activo: boolean;

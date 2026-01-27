@@ -1,0 +1,44 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                     📊 GUÍA MONGODB COMPASS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 PROBLEMA SOLUCIONADO:
+   ✅ Tu usuario SÍ existe en MongoDB
+   ✅ Password resetada a: tutor123
+   ✅ El problema era que no sabías la password correcta
+
+📋 INFORMACIÓN DE CONEXIÓN:
+   🌐 URI: mongodb+srv://TutoriasFIS:TUTORIASFIS2025-*@tutoriasfis.g1jx9dg.mongodb.net/
+   📊 Base de datos: tutoriasFIS
+   📁 Colección: usuarios
+
+🔍 PARA ENCONTRAR TU USUARIO EN MONGODB COMPASS:
+
+   1️⃣ Conecta a la base de datos "tutoriasFIS"
+   
+   2️⃣ Ve a la colección "usuarios"
+   
+   3️⃣ Usa este filtro en MongoDB Compass:
+      { "email": "said.luna@epn.edu.ec" }
+   
+   4️⃣ O usa este otro filtro:
+      { "_id": ObjectId("69731826fcc4a11e569d4800") }
+
+🎯 TUS CREDENCIALES ACTUALES:
+   📧 Email: said.luna@epn.edu.ec
+   🔑 Password: tutor123
+   🎭 Rol: Tutor
+   ✅ Estado: Activo
+
+💡 POSIBLES RAZONES POR LAS QUE NO LO VEÍAS ANTES:
+   ❌ Filtros aplicados en MongoDB Compass
+   ❌ Viendo la colección incorrecta
+   ❌ Conectado a otra base de datos
+   ❌ Password antigua que no recordabas
+
+🚀 PRÓXIMOS PASOS:
+   1. Intenta loguearte con: said.luna@epn.edu.ec / tutor123
+   2. Verifica en MongoDB Compass con los filtros de arriba
+   3. Si sigues teniendo problemas, revisa que estés en la BD correcta
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
