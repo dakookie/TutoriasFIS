@@ -59,10 +59,11 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('API Error:', { status: response.status, data });
         return {
           ok: false,
           success: false,
-          message: data.message || data.mensaje || 'Error en la petición',
+          message: Array.isArray(data.message) ? data.message.join(', ') : (data.message || data.mensaje || 'Error en la petición'),
           error: data.error,
         };
       }
@@ -87,6 +88,9 @@ class ApiClient {
         else if (data.mensajes) normalizedData.data = data.mensajes;
         else if (data.mensaje) normalizedData.data = data.mensaje;
         else if (data.chats) normalizedData.data = data.chats;
+        else if (data.preguntas) normalizedData.data = data.preguntas;
+        else if (data.pregunta) normalizedData.data = data.pregunta;
+        else if (data.respuesta) normalizedData.data = data.respuesta;
       }
       
       return normalizedData;
@@ -558,6 +562,49 @@ class ApiClient {
     return this.request(`/api/aula/${tutoriaId}/bibliografias/${bibliografiaId}`, {
       method: 'DELETE',
     });
+  }
+
+  // ==================== ENCUESTAS ====================
+
+  // Crear pregunta (admin)
+  async crearPregunta(data: { pregunta: string; materia: string }) {
+    return this.request('/api/encuestas/preguntas', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Obtener todas las preguntas (admin)
+  async getPreguntas() {
+    return this.request('/api/encuestas/preguntas');
+  }
+
+  // Obtener preguntas por materia (estudiante)
+  async getPreguntasPorMateria(materia: string) {
+    return this.request(`/api/encuestas/preguntas/materia/${encodeURIComponent(materia)}`);
+  }
+
+  // Enviar respuestas de encuesta (estudiante)
+  async enviarRespuestas(tutoriaId: string, respuestas: Record<string, number>) {
+    return this.request('/api/encuestas/respuestas', {
+      method: 'POST',
+      body: JSON.stringify({ tutoriaId, respuestas }),
+    });
+  }
+
+  // Verificar si ya respondió la encuesta
+  async verificarRespuesta(tutoriaId: string) {
+    return this.request(`/api/encuestas/verificar/${tutoriaId}`);
+  }
+
+  // Obtener promedio de calificación de una tutoría
+  async getPromedioTutoria(tutoriaId: string) {
+    return this.request(`/api/encuestas/tutoria/${tutoriaId}/promedio`);
+  }
+
+  // Obtener promedios por pregunta
+  async getPromediosPorPregunta(tutoriaId: string) {
+    return this.request(`/api/encuestas/tutoria/${tutoriaId}/promedios-preguntas`);
   }
 }
 

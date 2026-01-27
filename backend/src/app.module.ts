@@ -11,6 +11,7 @@ import { TutoriasModule } from './modules/tutorias/tutorias.module';
 import { SolicitudesModule } from './modules/solicitudes/solicitudes.module';
 import { MensajesModule } from './modules/mensajes/mensajes.module';
 import { AulaModule } from './modules/aula/aula.module';
+import { EncuestasModule } from './modules/encuestas/encuestas.module';
 
 // Guards
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -41,6 +42,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     SolicitudesModule,
     MensajesModule,
     AulaModule,
+    EncuestasModule,
   ],
   controllers: [],
   providers: [

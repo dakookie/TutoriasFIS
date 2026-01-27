@@ -246,7 +246,7 @@ export default function AdminDashboardPage() {
       {/* Home View - Cards */}
       {activeView === 'home' && (
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Solicitudes de Tutores Card */}
             <div
               onClick={() => setActiveView('tutores')}
@@ -283,6 +283,26 @@ export default function AdminDashboardPage() {
                 <p className="text-gray-600 text-sm mb-4">Aquí puedes gestionar las solicitudes pendientes de estudiantes</p>
                 <span className="inline-block bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full font-semibold">
                   {solicitudesEstudiantes.length} pendientes
+                </span>
+              </div>
+            </div>
+
+            {/* Formularios de Calificación Card */}
+            <div
+              onClick={() => router.push('/dashboard/admin/encuestas')}
+              className="bg-white rounded-xl shadow-md p-8 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer"
+            >
+              <div className="text-center">
+                <div className="w-32 h-32 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-20 h-20 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-semibold text-blue-600 mb-3">Formularios de Calificación</h2>
+                <p className="text-gray-600 text-sm mb-4">Gestiona las preguntas de los formularios de calificación</p>
+                <span className="inline-block bg-green-100 text-green-700 px-4 py-2 rounded-full font-semibold">
+                  Configurar encuestas
                 </span>
               </div>
             </div>
