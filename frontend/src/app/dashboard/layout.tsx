@@ -119,7 +119,7 @@ export default function DashboardLayout({
   const getHomeHref = () => {
     switch (user.rol) {
       case 'Estudiante':
-        return '/dashboard/estudiante/tutorias';
+        return '/dashboard/estudiante';
       case 'Tutor':
         return '/dashboard';
       case 'Administrador':

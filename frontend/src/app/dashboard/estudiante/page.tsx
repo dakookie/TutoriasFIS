@@ -1,177 +1,83 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, Badge, LoadingScreen, Alert, Button } from '@/components/ui';
-import api from '@/lib/api/client';
-import { Calendar, Users, Clock, BookOpen } from 'lucide-react';
-import { formatDate, formatTime } from '@/lib/utils';
-
-interface Tutoria {
-  _id: string;
-  materiaNombre: string;
-  fecha: string;
-  horaInicio: string;
-  horaFin: string;
-  cuposDisponibles: number;
-  cuposOriginales: number;
-  tutorNombre: string;
-  publicada: boolean;
-}
+import { LoadingScreen } from '@/components/ui';
 
 export default function EstudianteDashboardPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const [tutorias, setTutorias] = useState<Tutoria[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (authLoading) return;
     
     if (user?.rol !== 'Estudiante') {
       router.replace('/dashboard');
-      return;
     }
-
-    const fetchTutorias = async () => {
-      const response = await api.getTutoriasDisponibles();
-      if (response.success && Array.isArray(response.data)) {
-        setTutorias(response.data.slice(0, 5)); // Solo las primeras 5
-      } else {
-        setError('Error al cargar tutorías');
-      }
-      setIsLoading(false);
-    };
-
-    fetchTutorias();
   }, [user, authLoading, router]);
 
-  if (authLoading || isLoading) {
+  if (authLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          ¡Hola, {user?.nombre}!
-        </h1>
-        <p className="text-gray-600">
-          Bienvenido al sistema de tutorías de la Facultad de Ingeniería en Sistemas
-        </p>
-      </div>
+    <div>
+      <h1 className="text-4xl font-bold text-center text-gray-800 mb-3">
+        Bienvenido, Estudiante
+      </h1>
+      <p className="text-center text-gray-600 mb-12">
+        Hola {user?.nombre}, desde aquí puedes consultar tutorías disponibles y revisar tus solicitudes.
+      </p>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Tutorías Disponibles</p>
-                <p className="text-2xl font-bold text-gray-900">{tutorias.length}</p>
-              </div>
+      {/* Cards Container */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        {/* Card: Consultar Tutorías */}
+        <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col">
+          <div className="flex flex-col items-center text-center flex-grow">
+            <div className="bg-blue-100 rounded-full p-6 mb-6">
+              <svg className="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <BookOpen className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Materias</p>
-                <p className="text-2xl font-bold text-gray-900">8</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Tutores Activos</p>
-                <p className="text-2xl font-bold text-gray-900">12</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Próximas Tutorías */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Tutorías Disponibles</CardTitle>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => router.push('/dashboard/estudiante/tutorias')}
-            >
-              Ver todas
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {error && <Alert variant="error">{error}</Alert>}
-          
-          {tutorias.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              No hay tutorías disponibles en este momento
+            <h2 className="text-2xl font-semibold text-blue-600 mb-3">
+              Consultar Tutorías
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Explora las tutorías disponibles y solicita aquellas que te interesen.
             </p>
-          ) : (
-            <div className="space-y-4">
-              {tutorias.map((tutoria) => (
-                <div
-                  key={tutoria._id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">
-                      {tutoria.materiaNombre}
-                    </h3>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {formatDate(tutoria.fecha)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {formatTime(tutoria.horaInicio)} - {formatTime(tutoria.horaFin)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Tutor: {tutoria.tutorNombre}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={tutoria.cuposDisponibles > 0 ? 'success' : 'error'}>
-                      {tutoria.cuposDisponibles} cupos
-                    </Badge>
-                    <Button
-                      size="sm"
-                      disabled={tutoria.cuposDisponibles === 0}
-                    >
-                      Solicitar
-                    </Button>
-                  </div>
-                </div>
-              ))}
+          </div>
+          <button
+            onClick={() => router.push('/dashboard/estudiante/tutorias')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition w-full mt-auto"
+          >
+            Ver Tutorías
+          </button>
+        </div>
+
+        {/* Card: Ver Solicitudes */}
+        <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col">
+          <div className="flex flex-col items-center text-center flex-grow">
+            <div className="bg-green-100 rounded-full p-6 mb-6">
+              <svg className="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <h2 className="text-2xl font-semibold text-green-600 mb-3">
+              Mis Solicitudes
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Revisa el estado de las solicitudes que has enviado.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/dashboard/estudiante/solicitudes')}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition w-full mt-auto"
+          >
+            Ver Solicitudes
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
