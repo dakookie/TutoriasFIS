@@ -55,6 +55,9 @@ const registroBaseSchema = z.object({
 export const registroEstudianteSchema = registroBaseSchema
   .extend({
     rol: z.literal('Estudiante'),
+    carnetEstudiantil: z
+      .string()
+      .optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Las contraseñas no coinciden',

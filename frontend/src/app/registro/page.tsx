@@ -33,6 +33,8 @@ export default function RegistroPage() {
   const [materiasSeleccionadas, setMateriasSeleccionadas] = useState<string[]>([]);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
+  const [carnetBase64, setCarnetBase64] = useState<string | null>(null);
+  const [carnetFileName, setCarnetFileName] = useState<string | null>(null);
 
   // Schema dinámico según el rol
   const currentSchema = rol === 'Estudiante' ? registroEstudianteSchema : registroTutorSchema;
@@ -70,6 +72,8 @@ export default function RegistroPage() {
     setMateriasSeleccionadas([]);
     setPdfBase64(null);
     setPdfFileName(null);
+    setCarnetBase64(null);
+    setCarnetFileName(null);
     setApiError(null);
   }, [rol, setValue]);
 
@@ -112,11 +116,45 @@ export default function RegistroPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleCarnetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setApiError('Solo se permiten archivos PDF');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setApiError('El archivo no debe superar los 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setCarnetBase64(base64);
+      setCarnetFileName(file.name);
+      if (rol === 'Estudiante') {
+        setValue('carnetEstudiantil' as keyof RegistroFormData, base64 as never);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const removePdf = () => {
     setPdfBase64(null);
     setPdfFileName(null);
     if (rol === 'Tutor') {
       setValue('pdf' as keyof RegistroFormData, '' as never);
+    }
+  };
+
+  const removeCarnet = () => {
+    setCarnetBase64(null);
+    setCarnetFileName(null);
+    if (rol === 'Estudiante') {
+      setValue('carnetEstudiantil' as keyof RegistroFormData, '' as never);
     }
   };
 
@@ -128,6 +166,7 @@ export default function RegistroPage() {
       username: data.username || undefined,
       materias: rol === 'Tutor' ? materiasSeleccionadas : undefined,
       pdf: rol === 'Tutor' ? pdfBase64 || undefined : undefined,
+      carnetEstudiantil: rol === 'Estudiante' ? carnetBase64 || undefined : undefined,
     };
 
     // Eliminar confirmPassword antes de enviar
@@ -142,6 +181,8 @@ export default function RegistroPage() {
       setMateriasSeleccionadas([]);
       setPdfBase64(null);
       setPdfFileName(null);
+      setCarnetBase64(null);
+      setCarnetFileName(null);
     } else {
       setApiError(response.message || 'Error al registrar');
     }
@@ -408,6 +449,36 @@ export default function RegistroPage() {
                 <span className="text-red-600 text-xs mt-1 block">{errors.confirmPassword.message}</span>
               )}
             </div>
+
+            {/* Campo de carnet estudiantil (solo para estudiantes) */}
+            {rol === 'Estudiante' && (
+              <div>
+                <label className="block text-xs lg:text-sm font-extrabold text-gray-700 mb-1">
+                  Carnet Estudiantil (PDF) *
+                </label>
+                {carnetFileName ? (
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <span className="text-sm text-green-700 truncate flex items-center">
+                      <span className="text-xl mr-2">🎓</span>
+                      {carnetFileName}
+                    </span>
+                    <button type="button" onClick={removeCarnet} className="text-red-500 hover:text-red-700">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="file-upload-label text-gray-600 cursor-pointer w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center hover:border-gray-400 transition-colors">
+                    <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                    <span className="text-sm font-medium text-gray-700">Subir Carnet Estudiantil</span>
+                    <span className="text-xs text-gray-500 mt-1">PDF • Máx 5MB</span>
+                    <input type="file" className="hidden" accept=".pdf" onChange={handleCarnetChange} />
+                  </label>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Sube una copia escaneada de tu carnet estudiantil vigente
+                </p>
+              </div>
+            )}
 
             {/* Campo de archivo (se muestra según el rol) */}
             {rol === 'Tutor' && (

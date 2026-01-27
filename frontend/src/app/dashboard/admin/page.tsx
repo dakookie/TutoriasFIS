@@ -20,6 +20,7 @@ interface Usuario {
     semestre?: number;
   }>;
   pdf?: string;
+  carnetEstudiantil?: string;
   createdAt: string;
 }
 
@@ -477,13 +478,14 @@ export default function AdminDashboardPage() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nombre</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Apellido</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Carnet</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {solicitudesEstudiantes.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                         No se encontraron solicitudes de estudiantes pendientes
                       </td>
                     </tr>
@@ -493,6 +495,19 @@ export default function AdminDashboardPage() {
                         <td className="px-6 py-4 text-sm text-gray-700 font-medium">{usuario.nombre}</td>
                         <td className="px-6 py-4 text-sm text-gray-700">{usuario.apellido}</td>
                         <td className="px-6 py-4 text-sm text-gray-700">{usuario.email}</td>
+                        <td className="px-6 py-4 text-sm">
+                          {usuario.carnetEstudiantil ? (
+                            <button
+                              onClick={() => openPdfModal(usuario)}
+                              className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs hover:bg-blue-100"
+                            >
+                              <FileText className="h-3 w-3 mr-1" />
+                              Ver Carnet
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 text-xs">Sin carnet</span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 text-sm space-x-2">
                           <button
                             onClick={() => handleAprobar(usuario._id)}
@@ -530,6 +545,7 @@ export default function AdminDashboardPage() {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nombre</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Apellido</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Carnet</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Estado</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Fecha Registro</th>
                     </tr>
@@ -537,7 +553,7 @@ export default function AdminDashboardPage() {
                   <tbody className="divide-y divide-gray-200">
                     {getPaginatedData(estudiantesActivos, currentPageEstudiantes).length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                           No hay estudiantes activos
                         </td>
                       </tr>
@@ -547,6 +563,19 @@ export default function AdminDashboardPage() {
                           <td className="px-6 py-4 text-sm text-gray-700 font-medium">{estudiante.nombre}</td>
                           <td className="px-6 py-4 text-sm text-gray-700">{estudiante.apellido}</td>
                           <td className="px-6 py-4 text-sm text-gray-700">{estudiante.email}</td>
+                          <td className="px-6 py-4 text-sm">
+                            {estudiante.carnetEstudiantil ? (
+                              <button
+                                onClick={() => openPdfModal(estudiante)}
+                                className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs hover:bg-blue-100"
+                              >
+                                <FileText className="h-3 w-3 mr-1" />
+                                Ver Carnet
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-xs">Sin carnet</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 text-sm">
                             <span className="inline-block bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
                               Activo
@@ -611,18 +640,35 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Documento adjunto (PDF) */}
+              {/* Documento adjunto (PDF o Carnet Estudiantil) */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Documento Adjunto</h3>
-                {selectedUsuario.pdf ? (
-                  <div className="border border-gray-300 rounded-lg overflow-hidden">
-                    <iframe
-                      src={selectedUsuario.pdf}
-                      className="w-full h-96"
-                      title="Documento PDF"
-                    />
-                  </div>
-                ) : (
+                {selectedUsuario.rol === 'Tutor' && selectedUsuario.pdf && (
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Documento PDF (Certificado/Comprobante)</h3>
+                    <div className="border border-gray-300 rounded-lg overflow-hidden">
+                      <iframe
+                        src={selectedUsuario.pdf}
+                        className="w-full h-96"
+                        title="Documento PDF del tutor"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                {selectedUsuario.rol === 'Estudiante' && selectedUsuario.carnetEstudiantil && (
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Carnet Estudiantil</h3>
+                    <div className="border border-gray-300 rounded-lg overflow-hidden">
+                      <iframe
+                        src={selectedUsuario.carnetEstudiantil}
+                        className="w-full h-96"
+                        title="Carnet Estudiantil"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                {!selectedUsuario.pdf && !selectedUsuario.carnetEstudiantil && (
                   <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
                     No hay documento adjunto
                   </div>

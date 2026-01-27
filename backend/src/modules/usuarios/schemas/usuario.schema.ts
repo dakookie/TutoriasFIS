@@ -40,6 +40,9 @@ export class Usuario {
   pdf?: string;
 
   @Prop({ default: null })
+  carnetEstudiantil?: string;
+
+  @Prop({ default: null })
   resetPasswordToken?: string;
 
   @Prop({ default: null })

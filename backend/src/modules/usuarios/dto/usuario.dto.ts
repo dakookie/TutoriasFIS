@@ -7,7 +7,6 @@ import {
   MinLength,
   Matches,
   IsArray,
-  IsMongoId,
 } from 'class-validator';
 import { Rol } from '../schemas/usuario.schema';
 
@@ -48,12 +47,15 @@ export class CreateUsuarioDto {
 
   @IsOptional()
   @IsArray()
-  @IsMongoId({ each: true })
   materias?: string[];
 
   @IsOptional()
   @IsString()
   pdf?: string;
+
+  @IsOptional()
+  @IsString()
+  carnetEstudiantil?: string;
 }
 
 export class UpdateUsuarioDto {
@@ -73,7 +75,6 @@ export class UpdateUsuarioDto {
 
   @IsOptional()
   @IsArray()
-  @IsMongoId({ each: true })
   materias?: string[];
 
   @IsOptional()
