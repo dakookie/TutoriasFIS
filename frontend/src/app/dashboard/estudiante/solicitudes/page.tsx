@@ -3,10 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, Badge, LoadingScreen, Alert, Button } from '@/components/ui';
+import { LoadingScreen, Alert } from '@/components/ui';
 import api from '@/lib/api/client';
-import { Calendar, Clock, User, X } from 'lucide-react';
-import { formatDate, formatTime, getEstadoSolicitudColor } from '@/lib/utils';
+import { formatDate, formatTime } from '@/lib/utils';
 
 interface Solicitud {
   _id: string;
@@ -21,7 +20,7 @@ interface Solicitud {
     nombreAula?: string;
     enlaceAula?: string;
   };
-  estado: 'pendiente' | 'aceptada' | 'rechazada' | 'cancelada';
+  estado: 'Pendiente' | 'Aceptada' | 'Rechazada';
   createdAt: string;
 }
 
@@ -32,9 +31,11 @@ export default function SolicitudesEstudiantePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [solicitudToDelete, setSolicitudToDelete] = useState<string | null>(null);
 
   const fetchSolicitudes = async () => {
-    const response = await api.getSolicitudesEstudiante();
+    const response = await api.getMisSolicitudes();
     if (response.success && Array.isArray(response.data)) {
       setSolicitudes(response.data);
     } else {
@@ -54,215 +55,179 @@ export default function SolicitudesEstudiantePage() {
     fetchSolicitudes();
   }, [user, authLoading, router]);
 
-  const handleCancelar = async (solicitudId: string) => {
-    if (!confirm('¿Estás seguro de cancelar esta solicitud?')) return;
-    
-    setCancelLoading(solicitudId);
-    setError(null);
+  const handleEliminar = async (solicitudId: string) => {
+    setSolicitudToDelete(solicitudId);
+    setShowDeleteModal(true);
+  };
 
-    const response = await api.cancelarSolicitud(solicitudId);
+  const confirmDelete = async () => {
+    if (!solicitudToDelete) return;
+    
+    setCancelLoading(solicitudToDelete);
+    setError(null);
+    setShowDeleteModal(false);
+
+    const response = await api.eliminarSolicitud(solicitudToDelete);
     
     if (response.success) {
       await fetchSolicitudes();
     } else {
-      setError(response.message || 'Error al cancelar');
+      setError(response.message || 'Error al eliminar solicitud');
     }
     
     setCancelLoading(null);
+    setSolicitudToDelete(null);
   };
 
-  const getEstadoBadge = (estado: string) => {
-    const variants: Record<string, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
-      pendiente: 'warning',
-      aceptada: 'success',
-      rechazada: 'error',
-      cancelada: 'default',
-    };
-    return variants[estado] || 'default';
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setSolicitudToDelete(null);
   };
 
-  const getEstadoLabel = (estado: string) => {
-    const labels: Record<string, string> = {
-      pendiente: 'Pendiente',
-      aceptada: 'Aceptada',
-      rechazada: 'Rechazada',
-      cancelada: 'Cancelada',
-    };
-    return labels[estado] || estado;
+  const getEstadoClass = (estado: string) => {
+    switch (estado) {
+      case 'Aceptada':
+        return 'bg-green-100 text-green-800';
+      case 'Rechazada':
+        return 'bg-red-100 text-red-800';
+      case 'Pendiente':
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
   };
 
   if (authLoading || isLoading) {
     return <LoadingScreen />;
   }
 
-  const solicitudesPendientes = solicitudes.filter(s => s.estado === 'pendiente');
-  const solicitudesAceptadas = solicitudes.filter(s => s.estado === 'aceptada');
-  const solicitudesOtras = solicitudes.filter(s => !['pendiente', 'aceptada'].includes(s.estado));
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Mis Solicitudes</h1>
-        <p className="text-gray-600">Revisa el estado de tus solicitudes de tutoría</p>
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Mis Solicitudes</h2>
+      
+      {error && (
+        <Alert variant="error" className="mb-4">{error}</Alert>
+      )}
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-blue-100">
+            <tr>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Materia</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Fecha</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Hora Inicio</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Hora Fin</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Tutor</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Estado</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {solicitudes.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-4 text-gray-500">
+                  No se encontraron solicitudes de tutorías enviadas
+                </td>
+              </tr>
+            ) : (
+              solicitudes.map((solicitud) => {
+                const puedeEliminar = solicitud.estado === 'Pendiente';
+                const puedeIrAlAula = solicitud.estado === 'Aceptada';
+                const estadoClass = getEstadoClass(solicitud.estado);
+                
+                return (
+                  <tr key={solicitud._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {solicitud.tutoria.materiaNombre}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {formatDate(solicitud.tutoria.fecha)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {formatTime(solicitud.tutoria.horaInicio)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {formatTime(solicitud.tutoria.horaFin)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {solicitud.tutoria.tutorNombre}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${estadoClass}`}>
+                        {solicitud.estado}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        {puedeEliminar && (
+                          <button
+                            onClick={() => handleEliminar(solicitud._id)}
+                            disabled={cancelLoading === solicitud._id}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium transition disabled:opacity-50"
+                          >
+                            {cancelLoading === solicitud._id ? 'Cancelando...' : 'Cancelar'}
+                          </button>
+                        )}
+                        {puedeIrAlAula && (
+                          <a
+                            href={`/aula/${solicitud.tutoria._id}`}
+                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium transition inline-block"
+                          >
+                            Ir al Aula
+                          </a>
+                        )}
+                        {solicitud.estado === 'Rechazada' && (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {error && (
-        <Alert variant="error">{error}</Alert>
-      )}
+      {/* Modal de confirmación para eliminar */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-11/12 max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Confirmar eliminación</h2>
+                <button
+                  onClick={cancelDelete}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-      {/* Solicitudes Aceptadas */}
-      {solicitudesAceptadas.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            ✅ Tutorías Confirmadas
-          </h2>
-          <div className="grid gap-4">
-            {solicitudesAceptadas.map((solicitud) => (
-              <Card key={solicitud._id} className="border-green-200 bg-green-50">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {solicitud.tutoria.materiaNombre}
-                        </h3>
-                        <Badge variant="success">Aceptada</Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="h-4 w-4 text-blue-500" />
-                          <span>{formatDate(solicitud.tutoria.fecha)}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Clock className="h-4 w-4 text-green-500" />
-                          <span>{formatTime(solicitud.tutoria.horaInicio)} - {formatTime(solicitud.tutoria.horaFin)}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <User className="h-4 w-4 text-purple-500" />
-                          <span>{solicitud.tutoria.tutorNombre}</span>
-                        </div>
-                      </div>
+              <div className="mb-6">
+                <p className="text-gray-600">
+                  ¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.
+                </p>
+              </div>
 
-                      {solicitud.tutoria.nombreAula && (
-                        <p className="text-sm text-gray-600 mt-3">
-                          📍 {solicitud.tutoria.nombreAula}
-                        </p>
-                      )}
-                      
-                      {solicitud.tutoria.enlaceAula && (
-                        <a
-                          href={solicitud.tutoria.enlaceAula}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-block mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          🔗 Unirse a la reunión virtual
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelDelete}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded font-medium transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-medium transition"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      )}
-
-      {/* Solicitudes Pendientes */}
-      {solicitudesPendientes.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            ⏳ Pendientes de Aprobación
-          </h2>
-          <div className="grid gap-4">
-            {solicitudesPendientes.map((solicitud) => (
-              <Card key={solicitud._id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {solicitud.tutoria.materiaNombre}
-                        </h3>
-                        <Badge variant="warning">Pendiente</Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="h-4 w-4 text-blue-500" />
-                          <span>{formatDate(solicitud.tutoria.fecha)}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Clock className="h-4 w-4 text-green-500" />
-                          <span>{formatTime(solicitud.tutoria.horaInicio)} - {formatTime(solicitud.tutoria.horaFin)}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <User className="h-4 w-4 text-purple-500" />
-                          <span>{solicitud.tutoria.tutorNombre}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleCancelar(solicitud._id)}
-                      isLoading={cancelLoading === solicitud._id}
-                      className="text-red-600 hover:bg-red-50"
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Cancelar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Otras Solicitudes */}
-      {solicitudesOtras.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Historial
-          </h2>
-          <div className="grid gap-4">
-            {solicitudesOtras.map((solicitud) => (
-              <Card key={solicitud._id} className="opacity-75">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-gray-900">
-                        {solicitud.tutoria.materiaNombre}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {formatDate(solicitud.tutoria.fecha)} • {solicitud.tutoria.tutorNombre}
-                      </p>
-                    </div>
-                    <Badge variant={getEstadoBadge(solicitud.estado)}>
-                      {getEstadoLabel(solicitud.estado)}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sin solicitudes */}
-      {solicitudes.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-500 mb-4">No tienes solicitudes de tutoría</p>
-            <Button onClick={() => router.push('/dashboard/estudiante/tutorias')}>
-              Explorar tutorías disponibles
-            </Button>
-          </CardContent>
-        </Card>
       )}
     </div>
   );

@@ -8,6 +8,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Solicitud, SolicitudDocument, EstadoSolicitud } from './schemas/solicitud.schema';
+import { Usuario, UsuarioDocument } from '../usuarios/schemas/usuario.schema';
 import { CreateSolicitudDto, UpdateSolicitudDto, FiltrosSolicitudDto } from './dto/solicitud.dto';
 import { TutoriasService } from '../tutorias/tutorias.service';
 
@@ -15,12 +16,19 @@ import { TutoriasService } from '../tutorias/tutorias.service';
 export class SolicitudesService {
   constructor(
     @InjectModel(Solicitud.name) private solicitudModel: Model<SolicitudDocument>,
+    @InjectModel(Usuario.name) private usuarioModel: Model<UsuarioDocument>,
     private tutoriasService: TutoriasService,
   ) {}
 
   async crear(createDto: CreateSolicitudDto, estudianteId: string): Promise<SolicitudDocument> {
     // Verificar que la tutoría existe
     const tutoria = await this.tutoriasService.findById(createDto.tutoria);
+
+    // Obtener datos del estudiante
+    const estudiante = await this.usuarioModel.findById(estudianteId).exec();
+    if (!estudiante) {
+      throw new NotFoundException('Estudiante no encontrado');
+    }
 
     // Verificar que no existe una solicitud previa
     const existente = await this.solicitudModel.findOne({
@@ -40,6 +48,13 @@ export class SolicitudesService {
     const solicitud = new this.solicitudModel({
       ...createDto,
       estudiante: estudianteId,
+      estudianteNombre: `${estudiante.nombre} ${estudiante.apellido}`,
+      // Añadir datos desnormalizados para consultas rápidas
+      materia: tutoria.materiaNombre,
+      fecha: tutoria.fecha,
+      horaInicio: tutoria.horaInicio,
+      horaFin: tutoria.horaFin,
+      tutor: tutoria.tutorNombre,
     });
 
     const saved = await solicitud.save();
@@ -264,13 +279,21 @@ export class SolicitudesService {
     return updated;
   }
 
-  async eliminar(id: string, userId: string, userRol: string): Promise<void> {
+  async eliminar(id: string, userId: string): Promise<void> {
     const solicitud = await this.findById(id);
 
-    const estudianteId = (solicitud.estudiante as any)._id?.toString() || 
-                        solicitud.estudiante.toString();
+    // Verificar que la solicitud pertenece al estudiante
+    let estudianteId: string;
+    if (typeof solicitud.estudiante === 'object' && solicitud.estudiante._id) {
+      estudianteId = solicitud.estudiante._id.toString();
+    } else {
+      estudianteId = solicitud.estudiante.toString();
+    }
 
-    if (userRol !== 'admin' && estudianteId !== userId) {
+    // Convertir ambos a string para comparar
+    const userIdString = userId.toString();
+
+    if (estudianteId !== userIdString) {
       throw new ForbiddenException('No tienes permiso para eliminar esta solicitud');
     }
 

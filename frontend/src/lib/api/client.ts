@@ -328,6 +328,12 @@ class ApiClient {
     return this.request('/api/solicitudes/mis-solicitudes');
   }
 
+  async eliminarSolicitud(solicitudId: string) {
+    return this.request(`/api/solicitudes/${solicitudId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Alias para compatibilidad con páginas existentes
   async getSolicitudesEstudiante() {
     return this.getMisSolicitudes();

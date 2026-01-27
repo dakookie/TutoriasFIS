@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { LoadingScreen } from '@/components/ui';
+import { LoadingScreen, Alert, Button } from '@/components/ui';
 import api from '@/lib/api/client';
 import { formatDate, formatTime } from '@/lib/utils';
+import { Trash2 } from 'lucide-react';
 
 interface Tutoria {
   _id: string;
@@ -26,16 +27,32 @@ interface Materia {
   codigo?: string;
 }
 
+interface Solicitud {
+  _id: string;
+  tutoria: {
+    _id: string;
+    materiaNombre: string;
+    fecha: string;
+    horaInicio: string;
+    horaFin: string;
+    tutorNombre: string;
+  };
+  estado: 'Pendiente' | 'Aceptada' | 'Rechazada';
+  fechaSolicitud: string;
+}
+
 export default function TutoriasDisponiblesPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [tutorias, setTutorias] = useState<Tutoria[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
+  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [filtroMateria, setFiltroMateria] = useState<string>('Todas');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [solicitudLoading, setSolicitudLoading] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
   const fetchTutorias = async (materiaId?: string) => {
     setIsLoading(true);
@@ -46,6 +63,20 @@ export default function TutoriasDisponiblesPage() {
       setError('Error al cargar tutorías');
     }
     setIsLoading(false);
+  };
+
+  const fetchSolicitudes = async () => {
+    const response = await api.getMisSolicitudes();
+    if (response.success && Array.isArray(response.data)) {
+      setSolicitudes(response.data);
+    }
+  };
+
+  const fetchData = async (materiaId?: string) => {
+    await Promise.all([
+      fetchTutorias(materiaId),
+      fetchSolicitudes()
+    ]);
   };
 
   useEffect(() => {
@@ -65,7 +96,7 @@ export default function TutoriasDisponiblesPage() {
     };
 
     fetchMaterias();
-    fetchTutorias();
+    fetchData();
   }, [user, authLoading, router]);
 
   const handleFiltroChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -83,13 +114,45 @@ export default function TutoriasDisponiblesPage() {
     
     if (response.success) {
       setSuccessMessage('¡Solicitud enviada exitosamente!');
-      // Refrescar lista para actualizar cupos
-      await fetchTutorias(filtroMateria === 'Todas' ? undefined : filtroMateria);
+      // Refrescar datos para actualizar el estado
+      await fetchData(filtroMateria === 'Todas' ? undefined : filtroMateria);
     } else {
       setError(response.message || 'Error al enviar solicitud');
     }
     
     setSolicitudLoading(null);
+  };
+
+  const handleEliminarSolicitud = async (solicitudId: string) => {
+    if (!confirm('¿Estás seguro de que deseas cancelar esta solicitud?')) {
+      return;
+    }
+
+    setDeleteLoading(solicitudId);
+    setError(null);
+
+    const response = await api.eliminarSolicitud(solicitudId);
+    
+    if (response.success) {
+      setSuccessMessage('Solicitud cancelada exitosamente');
+      // Refrescar datos
+      await fetchData(filtroMateria === 'Todas' ? undefined : filtroMateria);
+    } else {
+      setError(response.message || 'Error al cancelar solicitud');
+    }
+    
+    setDeleteLoading(null);
+  };
+
+  // Verificar si el usuario ya tiene una solicitud para una tutoría
+  const tieneSolicitud = (tutoriaId: string) => {
+    return solicitudes.some(sol => sol.tutoria._id === tutoriaId);
+  };
+
+  // Obtener el estado de la solicitud para una tutoría
+  const getEstadoSolicitud = (tutoriaId: string) => {
+    const solicitud = solicitudes.find(sol => sol.tutoria._id === tutoriaId);
+    return solicitud?.estado;
   };
 
   if (authLoading || isLoading) {
@@ -167,29 +230,51 @@ export default function TutoriasDisponiblesPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">{formatTime(tutoria.horaFin)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{tutoria.tutorNombre}</td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => handleSolicitar(tutoria._id)}
-                      disabled={tutoria.cuposDisponibles === 0 || solicitudLoading === tutoria._id}
-                      className={`px-4 py-2 rounded text-sm font-medium transition ${
-                        tutoria.cuposDisponibles === 0
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-500 hover:bg-blue-600 text-white'
-                      }`}
-                    >
-                      {solicitudLoading === tutoria._id ? (
-                        <span className="flex items-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                          Enviando...
-                        </span>
-                      ) : tutoria.cuposDisponibles === 0 ? (
-                        'Sin cupos'
-                      ) : (
-                        'Solicitar'
-                      )}
-                    </button>
+                    {(() => {
+                      const yaTieneSolicitud = tieneSolicitud(tutoria._id);
+                      const estadoSolicitud = getEstadoSolicitud(tutoria._id);
+                      const sinCupos = tutoria.cuposDisponibles === 0;
+                      const cargando = solicitudLoading === tutoria._id;
+
+                      if (yaTieneSolicitud) {
+                        const badgeClass = estadoSolicitud === 'Aceptada' ? 'bg-green-100 text-green-800 border border-green-300' :
+                                         estadoSolicitud === 'Rechazada' ? 'bg-red-100 text-red-800 border border-red-300' :
+                                         'bg-yellow-100 text-yellow-800 border border-yellow-300';
+                        return (
+                          <span className={`px-3 py-2 rounded-lg text-sm font-medium ${badgeClass}`}>
+                            {estadoSolicitud}
+                          </span>
+                        );
+                      }
+
+                      if (sinCupos) {
+                        return (
+                          <span className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-500 border border-gray-300">
+                            Sin cupos
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <button
+                          onClick={() => handleSolicitar(tutoria._id)}
+                          disabled={cargando}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                        >
+                          {cargando ? (
+                            <span className="flex items-center">
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Enviando...
+                            </span>
+                          ) : (
+                            'Solicitar'
+                          )}
+                        </button>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))

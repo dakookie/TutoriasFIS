@@ -164,7 +164,7 @@ export class SolicitudesController {
 
   @Delete(':id')
   async eliminar(@Param('id') id: string, @Request() req) {
-    await this.solicitudesService.eliminar(id, req.user.userId, req.user.rol);
+    await this.solicitudesService.eliminar(id, req.user.userId);
     return {
       ok: true,
       mensaje: 'Solicitud eliminada correctamente',
