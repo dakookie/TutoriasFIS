@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Base de datos
+  # --- Base de Datos ---
   mongodb:
     image: mongo:latest
     container_name: tutorias_db
@@ -12,7 +12,7 @@ services:
     networks:
       - tutorias-net
 
-  # Backend (Microservicio API)
+  # --- Backend ---
   backend:
     build: ./backend
     container_name: tutorias_backend
@@ -28,7 +28,7 @@ services:
     networks:
       - tutorias-net
 
-  # Frontend
+  # --- Frontend ---
   frontend:
     build:
       context: ./frontend
@@ -44,14 +44,7 @@ services:
     networks:
       - tutorias-net
 
-networks:
-  tutorias-net:
-    driver: bridge
-
-volumes:
-  mongo_data:
-
-# Recolector de métricas
+  # --- Monitoreo (Prometheus) ---
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -62,15 +55,23 @@ volumes:
     networks:
       - tutorias-net
 
-  # Visualización
+  # --- Visualización (Grafana) ---
   grafana:
     image: grafana/grafana
     container_name: grafana
     ports:
-      - "3002:3000" # Acceso en puerto 3002 para no chocar con otros
+      - "3002:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - prometheus
     networks:
       - tutorias-net
+
+# --- Configuración Global ---
+networks:
+  tutorias-net:
+    driver: bridge
+
+volumes:
+  mongo_data:
