@@ -4,7 +4,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { APP_GUARD } from '@nestjs/core';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
-// Modules - Updated with AulaModule for virtual classroom functionality
+// --- NUEVOS IMPORTS ---
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+// Modules
 import { AuthModule } from './modules/auth/auth.module';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { MateriasModule } from './modules/materias/materias.module';
@@ -39,6 +43,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
       path: '/metrics', // Endpoint que leerá Prometheus
     }),
 
+
     // Módulos de la aplicación
     AuthModule,
     UsuariosModule,
@@ -49,10 +54,11 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     AulaModule,
     EncuestasModule,
   ],
-  controllers: [],
+  // --- AÑADIR CONTROLADOR AQUÍ ---
+  controllers: [AppController], 
   providers: [
-    // Guard global de autenticación JWT
-    // Las rutas públicas deben usar el decorador @Public()
+    // --- AÑADIR SERVICIO AQUÍ ---
+    AppService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
