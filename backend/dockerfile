@@ -1,0 +1,27 @@
+# backend/Dockerfile
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Instalar dependencias
+COPY package*.json ./
+RUN npm install
+
+# Copiar código fuente y compilar
+COPY . .
+RUN npm run build
+
+# --- Imagen de Producción ---
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+# Exponer el puerto definido en main.ts
+EXPOSE 4000
+
+# Comando de inicio
+CMD ["npm", "run", "start:prod"]

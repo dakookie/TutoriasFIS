@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { APP_GUARD } from '@nestjs/core';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 // Modules - Updated with AulaModule for virtual classroom functionality
 import { AuthModule } from './modules/auth/auth.module';
@@ -32,6 +33,10 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
              'mongodb://127.0.0.1:27017/tutorias_fis',
       }),
       inject: [ConfigService],
+    }),
+
+    PrometheusModule.register({
+      path: '/metrics', // Endpoint que leerá Prometheus
     }),
 
     // Módulos de la aplicación

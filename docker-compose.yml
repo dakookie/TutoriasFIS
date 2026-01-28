@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Base de datos
+  mongodb:
+    image: mongo:latest
+    container_name: tutorias_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - tutorias-net
+
+  # Backend (Microservicio API)
+  backend:
+    build: ./backend
+    container_name: tutorias_backend
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - MONGODB_URI=mongodb://mongodb:27017/tutorias_fis
+      - JWT_SECRET=SecretKey_EPN_2026
+      - FRONTEND_URL=http://localhost:3001
+    depends_on:
+      - mongodb
+    networks:
+      - tutorias-net
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:4000/api
+    container_name: tutorias_frontend
+    ports:
+      - "3001:3001"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:4000/api
+    depends_on:
+      - backend
+    networks:
+      - tutorias-net
+
+networks:
+  tutorias-net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+
+# Recolector de métricas
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - tutorias-net
+
+  # Visualización
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3002:3000" # Acceso en puerto 3002 para no chocar con otros
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - tutorias-net
