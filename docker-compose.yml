@@ -68,7 +68,7 @@ services:
     networks:
       - tutorias-net
 
-# --- Configuración Global ---
+# --- Redes y Volúmenes (Nivel Raíz) ---
 networks:
   tutorias-net:
     driver: bridge
