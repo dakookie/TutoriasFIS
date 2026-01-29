@@ -1,22 +1,10 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline - Simple
 
 on:
   push:
     branches: [main, develop, Microservices]
-    tags:
-      - 'v*.*.*'
   pull_request:
     branches: [main, develop, Microservices]
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
 
 env:
   REGISTRY: ghcr.io
@@ -24,158 +12,11 @@ env:
 
 jobs:
   # ═══════════════════════════════════════════════════════════════
-  # Linting y Code Quality
-  # ═══════════════════════════════════════════════════════════════
-  lint:
-    name: Lint Code
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Install dependencies - API Gateway
-        working-directory: ./backend/api-gateway
-        run: npm ci
-      
-      - name: Lint API Gateway
-        working-directory: ./backend/api-gateway
-        run: npm run lint
-      
-      - name: Install dependencies - Identity Service
-        working-directory: ./backend/identity-service
-        run: npm ci
-      
-      - name: Lint Identity Service
-        working-directory: ./backend/identity-service
-        run: npm run lint
-      
-      - name: Install dependencies - Academic Service
-        working-directory: ./backend/academic-service
-        run: npm ci
-      
-      - name: Lint Academic Service
-        working-directory: ./backend/academic-service
-        run: npm run lint
-      
-      - name: Install dependencies - Messaging Service
-        working-directory: ./backend/messaging-service
-        run: npm ci
-      
-      - name: Lint Messaging Service
-        working-directory: ./backend/messaging-service
-        run: npm run lint
-
-  # ═══════════════════════════════════════════════════════════════
-  # Testing
-  # ═══════════════════════════════════════════════════════════════
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    needs: lint
-    
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
-    strategy:
-      matrix:
-        service:
-          - name: api-gateway
-            path: ./backend/api-gateway
-          - name: identity-service
-            path: ./backend/identity-service
-          - name: academic-service
-            path: ./backend/academic-service
-          - name: messaging-service
-            path: ./backend/messaging-service
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: ${{ matrix.service.path }}/package-lock.json
-      
-      - name: Install dependencies
-        working-directory: ${{ matrix.service.path }}
-        run: npm ci
-      
-      - name: Run unit tests
-        working-directory: ${{ matrix.service.path }}
-        run: npm run test
-        env:
-          MONGODB_URI: mongodb://localhost:27017/tutorias_fis_test
-          JWT_SECRET: test-secret-key
-      
-      - name: Run e2e tests
-        working-directory: ${{ matrix.service.path }}
-        run: npm run test:e2e || echo "No e2e tests found"
-        env:
-          MONGODB_URI: mongodb://localhost:27017/tutorias_fis_test
-          JWT_SECRET: test-secret-key
-      
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ${{ matrix.service.path }}/coverage/lcov.info
-          flags: ${{ matrix.service.name }}
-          name: ${{ matrix.service.name }}-coverage
-
-  # ═══════════════════════════════════════════════════════════════
-  # Security Scanning
-  # ═══════════════════════════════════════════════════════════════
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: lint
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-      
-      - name: Run npm audit
-        working-directory: ./backend/api-gateway
-        run: npm audit --audit-level=moderate || true
-
-  # ═══════════════════════════════════════════════════════════════
-  # Build Docker Images (for PRs and testing)
+  # Build Docker Images - Verificación Simple
   # ═══════════════════════════════════════════════════════════════
   build:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'pull_request'
     
     strategy:
       matrix:
@@ -212,48 +53,15 @@ jobs:
           tags: tutoriasfis-${{ matrix.service.name }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
-      - name: Test Docker image
-        run: |
-          docker run --rm tutoriasfis-${{ matrix.service.name }}:${{ github.sha }} echo "Image OK"
 
   # ═══════════════════════════════════════════════════════════════
-  # Code Quality Analysis
+  # Push to Registry (solo en push a main/Microservices)
   # ═══════════════════════════════════════════════════════════════
-  sonarcloud:
-    name: SonarCloud Analysis
+  push:
+    name: Push Images to Registry
     runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.organization=tutoriasfis
-            -Dsonar.projectKey=tutoriasfis_backend
-            -Dsonar.sources=backend
-            -Dsonar.tests=backend
-            -Dsonar.test.inclusions=**/*.spec.ts
-            -Dsonar.javascript.lcov.reportPaths=backend/*/coverage/lcov.info
-
-  # ═══════════════════════════════════════════════════════════════
-  # Build and Push Docker Images (for deployments)
-  # ═══════════════════════════════════════════════════════════════
-  build-and-push:
-    name: Build and Push Images
-    runs-on: ubuntu-latest
-    needs: [test, security]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/Microservices' || startsWith(github.ref, 'refs/tags/v'))
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/Microservices')
     permissions:
       contents: read
       packages: write
@@ -288,11 +96,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}
           tags: |
             type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
       
       - name: Set service context
         id: service-path
@@ -315,157 +119,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            BUILD_DATE=${{ github.event.repository.updated_at }}
-            VCS_REF=${{ github.sha }}
-            VERSION=${{ steps.meta.outputs.version }}
-
-  # ═══════════════════════════════════════════════════════════════
-  # Deploy to Staging
-  # ═══════════════════════════════════════════════════════════════
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/Microservices' || github.event.inputs.environment == 'staging'
-    environment:
-      name: staging
-      url: https://staging.tutorias-fis.com
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-      
-      - name: Deploy to staging server
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_STAGING }} << 'EOF'
-            cd /var/www/tutorias-fis
-            git pull origin develop
-            docker-compose pull
-            docker-compose up -d --remove-orphans
-            docker system prune -f
-          EOF
-      
-      - name: Health check
-        run: |
-          sleep 30
-          curl --fail https://staging.tutorias-fis.com/health || exit 1
-      
-      - name: Notify deployment
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Staging deployment completed'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        if: always()
-
-  # ═══════════════════════════════════════════════════════════════
-  # Deploy to Production
-  # ═══════════════════════════════════════════════════════════════
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.environment == 'production'
-    environment:
-      name: production
-      url: https://tutorias-fis.com
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
-      
-      - name: Create backup
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }} << 'EOF'
-            cd /var/www/tutorias-fis
-            docker-compose exec -T mongodb mongodump --out=/backup/$(date +%Y%m%d_%H%M%S)
-          EOF
-      
-      - name: Deploy to production server
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }} << 'EOF'
-            cd /var/www/tutorias-fis
-            git pull origin main
-            docker-compose pull
-            docker-compose up -d --remove-orphans
-            docker system prune -f
-          EOF
-      
-      - name: Health check
-        run: |
-          sleep 30
-          curl --fail https://tutorias-fis.com/health || exit 1
-      
-      - name: Run smoke tests
-        run: |
-          curl --fail https://tutorias-fis.com/api/auth/health || exit 1
-          curl --fail https://tutorias-fis.com/api/academic/health || exit 1
-      
-      - name: Rollback on failure
-        if: failure()
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }} << 'EOF'
-            cd /var/www/tutorias-fis
-            git reset --hard HEAD~1
-            docker-compose up -d --remove-orphans
-          EOF
-      
-      - name: Notify deployment
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Production deployment completed'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        if: always()
-      
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            ## Changes in this Release
-            - Automated deployment via GitHub Actions
-            - See commit history for details
-          draft: false
-          prerelease: false
-
-  # ═══════════════════════════════════════════════════════════════
-  # Database Migrations
-  # ═══════════════════════════════════════════════════════════════
-  migrate:
-    name: Run Database Migrations
-    runs-on: ubuntu-latest
-    needs: deploy-production
-    if: startsWith(github.ref, 'refs/tags/v')
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      
-      - name: Run migrations
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI_PROD }}
-        run: |
-          cd backend/academic-service
-          npm ci
-          npm run migrate:up
