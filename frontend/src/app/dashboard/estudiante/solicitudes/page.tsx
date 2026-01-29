@@ -189,8 +189,15 @@ export default function SolicitudesEstudiantePage() {
     setEncuestaError(null);
 
     try {
-      console.log('Enviando encuesta:', { tutoriaId: tutoriaCalificar.id, respuestas: respuestasEncuesta });
-      const response = await api.enviarRespuestas(tutoriaCalificar.id, respuestasEncuesta);
+      // Transformar objeto a array para el backend
+      const respuestasArray = preguntasEncuesta.map(p => ({
+        pregunta: p._id,
+        calificacion: respuestasEncuesta[p._id],
+        comentario: undefined
+      }));
+      
+      console.log('Enviando encuesta:', { tutoriaId: tutoriaCalificar.id, respuestas: respuestasArray });
+      const response = await api.enviarRespuestas(tutoriaCalificar.id, respuestasArray);
       if (response.success) {
         cerrarModalEncuesta();
         setSuccessMessage('¡Gracias por tu calificación! Tu opinión es muy importante para mejorar nuestras tutorías.');

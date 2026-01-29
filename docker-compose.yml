@@ -1,7 +1,9 @@
 version: '3.8'
 
 services:
-  # --- Base de Datos ---
+  # ═══════════════════════════════════════════════════════════════
+  #  BASE DE DATOS
+  # ═══════════════════════════════════════════════════════════════
   mongodb:
     image: mongo:latest
     container_name: tutorias_db
@@ -11,69 +13,186 @@ services:
       - mongo_data:/data/db
     networks:
       - tutorias-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # --- Backend ---
-  backend:
-    build: ./backend
-    container_name: tutorias_backend
+  # ═══════════════════════════════════════════════════════════════
+  #  MICROSERVICIOS - BACKEND
+  # ═══════════════════════════════════════════════════════════════
+
+  # API Gateway - Punto de entrada único
+  api-gateway:
+    build: ./backend/api-gateway
+    container_name: api_gateway
     ports:
       - "4000:4000"
     environment:
       - PORT=4000
-      - MONGODB_URI=mongodb://mongodb:27017/tutorias_fis
+      - IDENTITY_SERVICE_URL=http://identity-service:4001
+      - ACADEMIC_SERVICE_URL=http://academic-service:4002
+      - MESSAGING_SERVICE_URL=http://messaging-service:4003
       - JWT_SECRET=SecretKey_EPN_2026
       - FRONTEND_URL=http://localhost:3001
     depends_on:
-      - mongodb
+      - identity-service
+      - academic-service
+      - messaging-service
     networks:
       - tutorias-net
+    restart: unless-stopped
 
-  # --- Frontend ---
+  # Identity Service - Autenticación y Usuarios
+  identity-service:
+    build: ./backend/identity-service
+    container_name: identity_service
+    ports:
+      - "4001:4001"
+    environment:
+      - PORT=4001
+      - MONGODB_URI=mongodb://mongodb:27017/tutorias_fis
+      - JWT_SECRET=SecretKey_EPN_2026
+      - NODE_ENV=production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - tutorias-net
+    restart: unless-stopped
+
+  # Academic Service - Materias, Tutorías, Solicitudes
+  academic-service:
+    build: ./backend/academic-service
+    container_name: academic_service
+    ports:
+      - "4002:4002"
+    environment:
+      - PORT=4002
+      - MONGODB_URI=mongodb://mongodb:27017/tutorias_fis
+      - JWT_SECRET=SecretKey_EPN_2026
+      - NODE_ENV=production
+      - IDENTITY_SERVICE_URL=http://identity-service:4001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - tutorias-net
+    restart: unless-stopped
+
+  # Messaging Service - Chat y Mensajes en tiempo real
+  messaging-service:
+    build: ./backend/messaging-service
+    container_name: messaging_service
+    ports:
+      - "4003:4003"
+    environment:
+      - PORT=4003
+      - MONGODB_URI=mongodb://mongodb:27017/tutorias_fis
+      - JWT_SECRET=SecretKey_EPN_2026
+      - NODE_ENV=production
+      - FRONTEND_URL=http://localhost:3001
+      - ACADEMIC_SERVICE_URL=http://academic-service:4002
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      academic-service:
+        condition: service_started
+    networks:
+      - tutorias-net
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════
+  #  FRONTEND
+  # ═══════════════════════════════════════════════════════════════
   frontend:
     build:
       context: ./frontend
       args:
-        # CORREGIDO: Se quitó el "/api" del final
         - NEXT_PUBLIC_API_URL=http://localhost:4000
     container_name: tutorias_frontend
     ports:
       - "3001:3001"
     environment:
-      # CORREGIDO: Se quitó el "/api" del final
       - NEXT_PUBLIC_API_URL=http://localhost:4000
     depends_on:
-      - backend
+      - api-gateway
     networks:
       - tutorias-net
+    restart: unless-stopped
 
-  # --- Monitoreo (Prometheus) ---
+  # ═══════════════════════════════════════════════════════════════
+  #  MONITOREO Y OBSERVABILIDAD
+  # ═══════════════════════════════════════════════════════════════
+
+  # Prometheus - Métricas y Monitoreo
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     container_name: prometheus
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
     networks:
       - tutorias-net
+    restart: unless-stopped
 
-  # --- Visualización (Grafana) ---
+  # Grafana - Visualización de Métricas
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:latest
     container_name: grafana
     ports:
       - "3002:3000"
     environment:
+      - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
     networks:
       - tutorias-net
+    restart: unless-stopped
 
-# --- Redes y Volúmenes (Nivel Raíz) ---
+  # Node Exporter - Métricas del Sistema
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - tutorias-net
+    restart: unless-stopped
+
+# ═══════════════════════════════════════════════════════════════
+#  REDES Y VOLÚMENES
+# ═══════════════════════════════════════════════════════════════
 networks:
   tutorias-net:
     driver: bridge
 
 volumes:
   mongo_data:
+  prometheus_data:
+  grafana_data:

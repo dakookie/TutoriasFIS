@@ -14,7 +14,8 @@ import {
   ClipboardList,
   BookOpen,
   UserCheck,
-  Plus
+  Plus,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoadingScreen } from '@/components/ui';
@@ -61,6 +62,12 @@ const navItems: NavItem[] = [
   },
   // Admin
   {
+    label: 'Home',
+    href: '/dashboard/admin',
+    icon: <Home className="h-5 w-5" />,
+    roles: ['Administrador'],
+  },
+  {
     label: 'Solicitudes Tutores',
     href: '/dashboard/admin?view=tutores',
     icon: <UserCheck className="h-5 w-5" />,
@@ -70,6 +77,12 @@ const navItems: NavItem[] = [
     label: 'Solicitudes Estudiantes',
     href: '/dashboard/admin?view=estudiantes',
     icon: <Users className="h-5 w-5" />,
+    roles: ['Administrador'],
+  },
+  {
+    label: 'Formularios de calificación',
+    href: '/dashboard/admin/encuestas',
+    icon: <FileText className="h-5 w-5" />,
     roles: ['Administrador'],
   },
   // Común
@@ -123,7 +136,7 @@ export default function DashboardLayout({
       case 'Tutor':
         return '/dashboard';
       case 'Administrador':
-        return '/dashboard/admin/tutores';
+        return '/dashboard/admin';
       default:
         return '/dashboard';
     }

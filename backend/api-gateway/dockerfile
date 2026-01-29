@@ -1,0 +1,24 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copiar package.json
+COPY package*.json ./
+
+# Instalar todas las dependencias (incluidas dev para compilar)
+RUN npm ci
+
+# Copiar código
+COPY . .
+
+# Compilar TypeScript
+RUN npm run build
+
+# Limpiar devDependencies
+RUN npm prune --omit=dev
+
+# Exponer puerto
+EXPOSE 4000
+
+# Comando de inicio
+CMD ["npm", "run", "start:prod"]

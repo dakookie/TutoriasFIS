@@ -433,7 +433,7 @@ export default function AulaVirtualPage() {
       case 'Tutor':
         return '/dashboard';
       case 'Administrador':
-        return '/dashboard/admin/tutores';
+        return '/dashboard/admin';
       default:
         return '/dashboard';
     }
@@ -482,10 +482,10 @@ export default function AulaVirtualPage() {
                     </Link>
                   </>
                 )}
-                <Link href="/dashboard/mensajes" className="text-gray-700 hover:text-gray-900 font-medium flex items-center">
+                {/* <Link href="/dashboard/mensajes" className="text-gray-700 hover:text-gray-900 font-medium flex items-center">
                   <MessageSquare className="w-5 h-5 mr-1" />
                   Chat
-                </Link>
+                </Link> */}
               </div>
             </div>
             <div className="flex items-center space-x-4">

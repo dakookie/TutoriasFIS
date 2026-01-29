@@ -285,18 +285,12 @@ export default function TutoriasTutorPage() {
       const promediosResponse = await api.getPromediosPorPregunta(tutoria._id);
       console.log('Promedios por pregunta response:', promediosResponse);
       
-      // Los campos vienen directamente en response, no en response.data
-      const promediosPorPregunta = (promediosResponse as any).promediosPorPregunta || 
-                                   (promediosResponse.data as any)?.promediosPorPregunta || {};
-      const totalRespuestas = (promediosResponse as any).totalRespuestas || 
-                              (promediosResponse.data as any)?.totalRespuestas || 0;
-      
       setCalificacionesModalData({
         tutoriaId: tutoria._id,
         materiaNombre: tutoria.materiaNombre,
         preguntas,
-        promedios: promediosPorPregunta,
-        totalRespuestas: totalRespuestas,
+        promedios: promediosResponse.promediosPorPregunta || {},
+        totalRespuestas: promediosResponse.totalRespuestas || 0,
       });
     } catch (error) {
       console.error('Error al cargar calificaciones:', error);

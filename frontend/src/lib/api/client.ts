@@ -47,12 +47,25 @@ class ApiClient {
     }
 
     try {
+      const headers: Record<string, string> = {};
+      
+      // Copiar headers existentes si los hay
+      if (fetchOptions.headers) {
+        Object.entries(fetchOptions.headers).forEach(([key, value]) => {
+          if (typeof value === 'string') {
+            headers[key] = value;
+          }
+        });
+      }
+      
+      // Solo agregar Content-Type si hay body
+      if (fetchOptions.body) {
+        headers['Content-Type'] = 'application/json';
+      }
+      
       const response = await fetch(url, {
         ...fetchOptions,
-        headers: {
-          'Content-Type': 'application/json',
-          ...fetchOptions.headers,
-        },
+        headers,
         credentials: 'include', // Incluir cookies
       });
 
@@ -585,7 +598,7 @@ class ApiClient {
   }
 
   // Enviar respuestas de encuesta (estudiante)
-  async enviarRespuestas(tutoriaId: string, respuestas: Record<string, number>) {
+  async enviarRespuestas(tutoriaId: string, respuestas: Array<{pregunta: string, calificacion: number, comentario?: string}>) {
     return this.request('/api/encuestas/respuestas', {
       method: 'POST',
       body: JSON.stringify({ tutoriaId, respuestas }),
