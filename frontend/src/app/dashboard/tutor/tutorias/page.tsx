@@ -289,8 +289,8 @@ export default function TutoriasTutorPage() {
         tutoriaId: tutoria._id,
         materiaNombre: tutoria.materiaNombre,
         preguntas,
-        promedios: promediosResponse.promediosPorPregunta || {},
-        totalRespuestas: promediosResponse.totalRespuestas || 0,
+        promedios: (promediosResponse as any).promediosPorPregunta || {},
+        totalRespuestas: (promediosResponse as any).totalRespuestas || 0,
       });
     } catch (error) {
       console.error('Error al cargar calificaciones:', error);
