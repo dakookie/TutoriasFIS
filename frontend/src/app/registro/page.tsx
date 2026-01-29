@@ -84,7 +84,11 @@ export default function RegistroPage() {
         : [...prev, materiaId];
       
       if (rol === 'Tutor') {
-        setValue('materias' as keyof RegistroFormData, newSelection as never);
+        // Convertir IDs a nombres de materias antes de guardar en el formulario
+        const materiasNombres = newSelection.map(
+          (id) => materias.find((m) => m._id === id)?.nombre || id
+        );
+        setValue('materias' as keyof RegistroFormData, materiasNombres as never);
       }
       return newSelection;
     });
@@ -161,10 +165,17 @@ export default function RegistroPage() {
   const onSubmit = async (data: RegistroFormData) => {
     setApiError(null);
 
+    // Convertir IDs seleccionados a nombres de materias
+    const materiasNombres = rol === 'Tutor' 
+      ? materiasSeleccionadas.map((id) => 
+          materias.find((m) => m._id === id)?.nombre || id
+        )
+      : undefined;
+
     const submitData = {
       ...data,
       username: data.username || undefined,
-      materias: rol === 'Tutor' ? materiasSeleccionadas : undefined,
+      materias: materiasNombres,
       pdf: rol === 'Tutor' ? pdfBase64 || undefined : undefined,
       carnetEstudiantil: rol === 'Estudiante' ? carnetBase64 || undefined : undefined,
     };

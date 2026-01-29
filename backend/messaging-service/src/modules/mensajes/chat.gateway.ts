@@ -34,62 +34,44 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(@ConnectedSocket() client: Socket) {
     try {
-      // Extraer token desde cookies o query params
       const token =
         client.handshake.auth?.token ||
         client.handshake.headers?.cookie
           ?.split(';')
-          .find(c => c.trim().startsWith('token='))
+          .find((c) => c.trim().startsWith('token='))
           ?.split('=')[1];
 
       if (!token) {
-        console.log('❌ Cliente sin token');
+        // console.log('❌ Cliente sin token'); // Comentado para reducir ruido si hay reconexiones
         client.disconnect();
         return;
       }
 
-      // Verificar JWT
       const secret = this.configService.get<string>('JWT_SECRET') || 'defaultsecret';
       const payload = this.jwtService.verify(token, { secret });
 
       if (!payload || !payload.userId) {
-        console.log('❌ Token inválido');
         client.disconnect();
         return;
       }
 
-      // Guardar información del usuario y token en el socket
       client.data.user = payload;
-      const cookieHeader = client.handshake.headers?.cookie || '';
-      // Extraer solo el token del cookie header
-      const jwtToken = cookieHeader.replace(/^.*token=/, '').replace(/;.*$/, '');
-      client.data.jwtToken = jwtToken;
-      client.data.token = token;
+      // Guardar el token original por si se necesita para llamadas a otros microservicios
+      client.data.jwtToken = token; 
+      
       this.connectedUsers.set(client.id, payload.userId);
 
-      // Unir a sala específica según rol
+      // Unir a sala personal (para notificaciones globales)
       if (payload.rol === 'Tutor') {
         client.join(`tutor-${payload.userId}`);
       } else if (payload.rol === 'Estudiante') {
         client.join(`estudiante-${payload.userId}`);
       }
 
-      console.log(`✅ Usuario conectado: ${payload.nombre} ${payload.apellido} (${payload.rol})`);
-
-      // Emitir confirmación
-      client.emit('connected', {
-        userId: payload.userId,
-        nombre: payload.nombre,
-        apellido: payload.apellido,
-        rol: payload.rol,
-      });
-
-      // Enviar contador de mensajes no leídos
-      const noLeidos = await this.mensajesService.contarNoLeidos(payload.userId);
-      client.emit('mensajes:no-leidos', { cantidad: noLeidos });
+      console.log(`✅ Socket: Usuario conectado ${payload.userId} (${payload.rol})`);
 
     } catch (error) {
-      console.error('Error en handleConnection:', error.message);
+      // console.error('Error conexión socket:', error.message);
       client.disconnect();
     }
   }
@@ -97,7 +79,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(@ConnectedSocket() client: Socket) {
     const userId = this.connectedUsers.get(client.id);
     if (userId) {
-      console.log(`❌ Usuario desconectado: ${userId}`);
       this.connectedUsers.delete(client.id);
     }
   }
@@ -123,32 +104,36 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.data.jwtToken,
       );
 
-      // Emitir a todos los receptores
+      // Emitir a los destinatarios
       for (const mensaje of mensajes) {
         const mensajeData = {
-          _id: mensaje._id,
-          tutoria: mensaje.tutoria,
-          emisor: mensaje.emisor,
+          _id: mensaje._id.toString(),
+          tutoria: mensaje.tutoria.toString(),
+          emisor: mensaje.emisor.toString(),
           emisorNombre: mensaje.emisorNombre,
           emisorRol: mensaje.emisorRol,
-          receptor: mensaje.receptor,
+          receptor: mensaje.receptor.toString(),
           receptorNombre: mensaje.receptorNombre,
           contenido: mensaje.contenido,
           createdAt: (mensaje as any).createdAt,
         };
 
-        // Emitir al emisor
-        client.emit('chat:nuevo-mensaje', mensajeData);
+        // -----------------------------------------------------
+        // 🔥 CORRECCIÓN CLAVE AQUÍ ABAJO 🔥
+        // -----------------------------------------------------
+        
+        // 1. Emitir a la SALA DE LA TUTORÍA (Para que aparezca en el chat abierto en tiempo real)
+        // Esto asegura que tanto el tutor como el estudiante vean el mensaje si tienen el chat abierto
+        this.server.to(`tutoria-${mensajeData.tutoria}`).emit('chat:nuevo-mensaje', mensajeData);
 
-        // Emitir al receptor según su rol
+        // 2. Notificar al receptor en su sala personal (Para alertas/notificaciones fuera del chat)
         const receptorId = mensaje.receptor.toString();
-        if (mensaje.emisorRol === 'Tutor') {
-          this.server.to(`estudiante-${receptorId}`).emit('chat:nuevo-mensaje', mensajeData);
-        } else {
-          this.server.to(`tutor-${receptorId}`).emit('chat:nuevo-mensaje', mensajeData);
-          // También emitir a otros estudiantes
-          this.server.to(`estudiante-${receptorId}`).emit('chat:nuevo-mensaje', mensajeData);
-        }
+        const salaReceptor = mensaje.emisorRol === 'Tutor' ? `estudiante-${receptorId}` : `tutor-${receptorId}`;
+        
+        // Emitimos solo si no está en la sala de tutoría (opcional, pero enviar doble no daña si el frontend lo filtra)
+        this.server.to(salaReceptor).emit('chat:notificacion', mensajeData); 
+
+        console.log(`📤 Mensaje enviado en tutoria-${mensajeData.tutoria}`);
       }
 
     } catch (error) {
@@ -164,17 +149,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     try {
       const user = client.data.user;
+      if (!user) return;
 
-      if (!user || !user.userId) {
-        client.emit('chat:error', { message: 'Usuario no autenticado' });
-        return;
-      }
+      // 1. Unirse a la sala específica de esta tutoría
+      const roomName = `tutoria-${data.tutoriaId}`;
+      client.join(roomName);
+      console.log(`🔌 ${user.nombre} se unió a la sala: ${roomName}`);
 
-      // Unirse a sala de tutoría
-      client.join(`tutoria-${data.tutoriaId}`);
-      console.log(`Usuario ${user.nombre} se unió a tutoria-${data.tutoriaId}`);
-
-      // Enviar mensajes previos
+      // 2. Enviar mensajes previos (Historial)
       const mensajes = await this.mensajesService.obtenerMensajesPorTutoria(
         data.tutoriaId,
         user.userId,
@@ -184,8 +166,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.emit('chat:mensajes-previos', { mensajes });
 
     } catch (error) {
-      console.error('Error al unirse a tutoría:', error);
-      client.emit('chat:error', { message: error.message || 'Error al unirse a tutoría' });
+      console.error('Error unirse tutoría:', error);
     }
   }
 
@@ -195,6 +176,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { tutoriaId: string },
   ) {
     client.leave(`tutoria-${data.tutoriaId}`);
-    console.log(`Usuario salió de tutoria-${data.tutoriaId}`);
   }
 }

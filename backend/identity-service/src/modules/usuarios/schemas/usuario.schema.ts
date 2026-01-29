@@ -30,7 +30,7 @@ export class Usuario {
   @Prop({ required: true, enum: Rol })
   rol: Rol;
 
-  @Prop([String])
+  @Prop([{ type: String }])
   materias: string[];
 
   @Prop({ default: false })

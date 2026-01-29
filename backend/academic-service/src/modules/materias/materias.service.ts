@@ -47,6 +47,13 @@ export class MateriasService {
     return materia;
   }
 
+  async findByIds(ids: string[]): Promise<MateriaDocument[]> {
+    const validIds = ids.filter(id => Types.ObjectId.isValid(id))
+      .map(id => new Types.ObjectId(id));
+    
+    return this.materiaModel.find({ _id: { $in: validIds } }).exec();
+  }
+
   async actualizar(id: string, updateDto: UpdateMateriaDto): Promise<MateriaDocument> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('ID de materia inválido');

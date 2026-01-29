@@ -38,6 +38,12 @@ export default function MensajesPage() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [cargando, setCargando] = useState(true);
   const mensajesEndRef = useRef<HTMLDivElement>(null);
+  const conversacionActivaRef = useRef<string | null>(null);
+
+  // Mantener ref actualizada
+  useEffect(() => {
+    conversacionActivaRef.current = conversacionActiva;
+  }, [conversacionActiva]);
 
   // Conectar al WebSocket
   useEffect(() => {
@@ -54,10 +60,26 @@ export default function MensajesPage() {
 
     newSocket.on('chat:nuevo-mensaje', (mensaje: Mensaje) => {
       console.log('Nuevo mensaje recibido:', mensaje);
+      console.log('Conversación activa (ref):', conversacionActivaRef.current);
+      console.log('Tutoria del mensaje:', mensaje.tutoria);
+      console.log('Tipo tutoria mensaje:', typeof mensaje.tutoria, 'Longitud:', mensaje.tutoria?.length);
+      console.log('Tipo conversación activa:', typeof conversacionActivaRef.current, 'Longitud:', conversacionActivaRef.current?.length);
       
-      // Si el mensaje es de la conversación activa, agregarlo
-      if (conversacionActiva && mensaje.tutoria === conversacionActiva) {
+      // Usar ref para obtener el valor actualizado
+      const tutoriaActual = conversacionActivaRef.current;
+      
+      console.log('Comparando:', {
+        mensajeTutoria: mensaje.tutoria?.toString(),
+        tutoriaActual: tutoriaActual?.toString(),
+        sonIguales: mensaje.tutoria?.toString() === tutoriaActual?.toString()
+      });
+      
+      // Actualizar mensajes si es de la conversación activa
+      if (tutoriaActual && mensaje.tutoria?.toString() === tutoriaActual?.toString()) {
+        console.log('✅ Agregando mensaje a la conversación activa');
         setMensajes(prev => [...prev, mensaje]);
+      } else {
+        console.log('❌ Mensaje no es de la conversación activa');
       }
       
       // Actualizar lista de conversaciones
@@ -116,6 +138,7 @@ export default function MensajesPage() {
 
   // Seleccionar conversación
   const seleccionarConversacion = async (tutoriaId: string) => {
+    console.log('📍 Seleccionando conversación:', tutoriaId, 'Tipo:', typeof tutoriaId, 'Longitud:', tutoriaId?.length);
     setConversacionActiva(tutoriaId);
     setMensajes([]);
 

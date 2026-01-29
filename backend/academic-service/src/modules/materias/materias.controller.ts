@@ -43,6 +43,13 @@ export class MateriasController {
     };
   }
 
+  @Post('ids-to-names')
+  @Public()
+  async idsToNames(@Body() body: { ids: string[] }) {
+    const materias = await this.materiasService.findByIds(body.ids);
+    return materias.map(m => ({ _id: m._id.toString(), nombre: m.nombre }));
+  }
+
   @Get('estadisticas')
   @Roles('Administrador')
   async getEstadisticas() {

@@ -11,6 +11,7 @@ import * as crypto from 'crypto';
 import { Usuario, UsuarioDocument } from '../usuarios/schemas/usuario.schema';
 import { LoginDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import { CreateUsuarioDto } from '../usuarios/dto/usuario.dto';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -34,8 +35,15 @@ export class AuthService {
       }
     }
 
+    // Convert materia IDs to names if needed
+    let materiasProcessed = createUsuarioDto.materias;
+    if (createUsuarioDto.rol === 'Tutor' && createUsuarioDto.materias?.length > 0) {
+      materiasProcessed = await this.convertMateriaIdsToNames(createUsuarioDto.materias);
+    }
+
     const usuario = new this.usuarioModel({
       ...createUsuarioDto,
+      materias: materiasProcessed,
       activo: false,
     });
 
@@ -45,6 +53,34 @@ export class AuthService {
       success: true,
       message: 'Registro exitoso. Tu cuenta será revisada por un administrador.',
     };
+  }
+
+  private async convertMateriaIdsToNames(materias: string[]): Promise<string[]> {
+    const objectIdRegex = /^[0-9a-f]{24}$/i;
+    const materiasToConvert = materias.filter(m => objectIdRegex.test(m));
+
+    if (materiasToConvert.length === 0) {
+      return materias;
+    }
+
+    try {
+      // Call academic-service to get materia names
+      const response = await axios.post<Array<{ _id: string; nombre: string }>>('http://academic-service:4002/materias/ids-to-names', {
+        ids: materiasToConvert
+      });
+
+      const idToNameMap = new Map(response.data.map(m => [m._id, m.nombre]));
+
+      return materias.map(m => {
+        if (objectIdRegex.test(m)) {
+          return idToNameMap.get(m) || m;
+        }
+        return m;
+      });
+    } catch (error) {
+      console.error('Error converting materia IDs to names:', error);
+      return materias; // Return original if conversion fails
+    }
   }
 
   async login(loginDto: LoginDto) {

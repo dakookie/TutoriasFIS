@@ -200,8 +200,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 archivoBase64 = await archivoABase64(archivoSeleccionado);
             }
 
-            // Usar los IDs de las materias seleccionadas
-            const materiasArray = rol === 'Tutor' ? materiasSeleccionadas : [];
+            // Convertir IDs de materias a nombres
+            const materiasArray = rol === 'Tutor' 
+                ? materiasSeleccionadas.map(id => {
+                    const materia = materiasDisponibles.find(m => m._id === id);
+                    return materia ? materia.nombre : id;
+                })
+                : [];
 
             // Crear objeto de datos para el registro
             const datosRegistro = {
