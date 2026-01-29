@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { MetricsController } from './common/controllers/metrics.controller';
+import { MetricsMiddleware } from './common/middleware/metrics.middleware';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     AuthModule,
     UsuariosModule,
   ],
+  controllers: [MetricsController],
   providers: [
     {
       provide: APP_GUARD,
@@ -30,4 +33,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}

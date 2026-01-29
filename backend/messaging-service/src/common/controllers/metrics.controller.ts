@@ -17,18 +17,18 @@ export class MetricsController {
     });
   }
 
-  @Get('/metrics')
+  @Get('metrics')
   async getMetrics(@Res() res: Response) {
     res.set('Content-Type', this.register.contentType);
     const metrics = await this.register.metrics();
     res.send(metrics);
   }
 
-  @Get('/health')
+  @Get('health')
   healthCheck() {
     return {
       status: 'ok',
-      service: process.env.SERVICE_NAME || 'api-gateway',
+      service: process.env.SERVICE_NAME || 'unknown-service',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       memory: process.memoryUsage(),

@@ -2,8 +2,37 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'nestjs-backend'
+  - job_name: 'api-gateway'
     static_configs:
-      - targets: ['backend:4000']
+      - targets: ['api-gateway:4000']
         labels:
-          application: 'Tutorias Backend'
+          service: 'api-gateway'
+          application: 'Tutorias FIS'
+  
+  - job_name: 'identity-service'
+    static_configs:
+      - targets: ['identity-service:4001']
+        labels:
+          service: 'identity-service'
+          application: 'Tutorias FIS'
+  
+  - job_name: 'academic-service'
+    static_configs:
+      - targets: ['academic-service:4002']
+        labels:
+          service: 'academic-service'
+          application: 'Tutorias FIS'
+  
+  - job_name: 'messaging-service'
+    static_configs:
+      - targets: ['messaging-service:4003']
+        labels:
+          service: 'messaging-service'
+          application: 'Tutorias FIS'
+  
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+          application: 'System Metrics'

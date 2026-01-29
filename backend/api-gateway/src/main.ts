@@ -22,8 +22,10 @@ async function bootstrap() {
   // Cookie parser
   app.use(cookieParser());
 
-  // Prefijo global
-  app.setGlobalPrefix('api');
+  // Prefijo global 'api' excepto para métricas y health
+  app.setGlobalPrefix('api', {
+    exclude: ['/metrics', '/health'],
+  });
 
   const port = process.env.PORT || 4000;
   await app.listen(port);

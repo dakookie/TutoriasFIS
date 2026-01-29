@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { APP_GUARD } from '@nestjs/core';
@@ -11,6 +11,8 @@ import { MensajesModule } from './modules/mensajes/mensajes.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { JwtStrategy } from './common/strategies/jwt.strategy';
+import { MetricsController } from './common/controllers/metrics.controller';
+import { MetricsMiddleware } from './common/middleware/metrics.middleware';
 
 @Module({
   imports: [
@@ -39,6 +41,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     MensajesModule,
     // ChatModule,
   ],
+  controllers: [MetricsController],
   providers: [
     JwtStrategy,
     {
@@ -47,4 +50,8 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}
