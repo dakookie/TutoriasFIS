@@ -67,11 +67,22 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
       
+      - name: Set service context
+        id: service-path
+        run: |
+          if [ "${{ matrix.service }}" = "frontend" ]; then
+            echo "context=./frontend" >> $GITHUB_OUTPUT
+            echo "dockerfile=./frontend/dockerfile" >> $GITHUB_OUTPUT
+          else
+            echo "context=./backend/${{ matrix.service }}" >> $GITHUB_OUTPUT
+            echo "dockerfile=./backend/${{ matrix.service }}/dockerfile" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend/${{ matrix.service }}
-          file: ./backend/${{ matrix.service }}/dockerfile
+          context: ${{ steps.service-path.outputs.context }}
+          file: ${{ steps.service-path.outputs.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
