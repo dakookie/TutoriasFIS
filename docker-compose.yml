@@ -52,9 +52,10 @@ services:
       - "4001:4001"
     environment:
       - PORT=4001
-      - MONGODB_URI=mongodb://mongodb:27017/tutorias_fis
+      - MONGODB_URI=mongodb://mongodb:27017/identity_db
       - JWT_SECRET=SecretKey_EPN_2026
       - NODE_ENV=production
+      - SERVICE_NAME=identity-service
     depends_on:
       mongodb:
         condition: service_healthy
@@ -70,10 +71,11 @@ services:
       - "4002:4002"
     environment:
       - PORT=4002
-      - MONGODB_URI=mongodb://mongodb:27017/tutorias_fis
+      - MONGODB_URI=mongodb://mongodb:27017/academic_db
       - JWT_SECRET=SecretKey_EPN_2026
       - NODE_ENV=production
       - IDENTITY_SERVICE_URL=http://identity-service:4001
+      - SERVICE_NAME=academic-service
     depends_on:
       mongodb:
         condition: service_healthy
@@ -89,11 +91,12 @@ services:
       - "4003:4003"
     environment:
       - PORT=4003
-      - MONGODB_URI=mongodb://mongodb:27017/tutorias_fis
+      - MONGODB_URI=mongodb://mongodb:27017/messaging_db
       - JWT_SECRET=SecretKey_EPN_2026
       - NODE_ENV=production
       - FRONTEND_URL=http://localhost:3001
       - ACADEMIC_SERVICE_URL=http://academic-service:4002
+      - SERVICE_NAME=messaging-service
     depends_on:
       mongodb:
         condition: service_healthy
